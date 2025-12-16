@@ -1,57 +1,73 @@
 package repository
 
 import (
-	"cloudfox-api/internal/service/model"
 	"context"
+	"errors"
+	"fmt"
 
+	"cloudfox-api/internal/service/model"
+
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/lib/pq"
 )
 
 type AccountRepository struct {
-	db *pgxpool.Pool
+	pool *pgxpool.Pool
 }
 
-func NewAccountRepo(db *pgxpool.Pool) *AccountRepository {
-	return &AccountRepository{db: db}
+func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
+	if pool == nil {
+		panic("AccountRepository: pool is nil")
+	}
+	return &AccountRepository{pool: pool}
 }
 
-func (repository *AccountRepository) GetByID(ctx context.Context, id string) (*model.Account, error) {
-	const q = `
-        SELECT 
-            id,
-			username,
-			fullname,
-			passwordHash,
-			passwordHashAlgo,
-			email,
-			mfaEnabled,
-			mfaType,
-			creationDate,
-			phoneNumber,
-			active
-        FROM sp_query_accounts($1, NULL)
-    `
-
-	var a model.Account
-
-	err := repository.db.QueryRow(ctx, q, id).Scan(
-		&a.Id,
-		&a.Username,
-		&a.Fullname,
-		&a.PasswordHash,
-		&a.PasswordHashAlgo,
-		&a.Email,
-		&a.MFAEnabled,
-		&a.MFAType,
-		&a.CreationDate,
-		&a.PhoneNumber,
-		&a.Active,
-	)
-
-	if err != nil {
-		return nil, err
+func (r *AccountRepository) GetByID(
+	ctx context.Context,
+	id string,
+) (*model.Account, error) {
+	if id == "" {
+		return nil, errors.New("id cannot be empty")
 	}
 
-	return &a, nil
+	const query = `
+		SELECT
+			id,
+			username,
+			fullname,
+			password_hash,
+			password_hash_algo,
+			email,
+			mfa_enabled,
+			mfa_type,
+			creation_date,
+			phone_number,
+			active
+		FROM accounts
+		WHERE id = $1
+	`
+
+	var acc model.Account
+
+	err := r.pool.QueryRow(ctx, query, id).Scan(
+		&acc.Id,
+		&acc.Username,
+		&acc.Fullname,
+		&acc.PasswordHash,
+		&acc.PasswordHashAlgo,
+		&acc.Email,
+		&acc.MFAEnabled,
+		&acc.MFAType,
+		&acc.CreationDate,
+		&acc.PhoneNumber,
+		&acc.Active,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("get account by id %s: %w", id, err)
+	}
+
+	return &acc, nil
 }

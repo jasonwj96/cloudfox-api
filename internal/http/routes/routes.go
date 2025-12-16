@@ -8,5 +8,5 @@ import (
 
 func RegisterRoutes(router *gin.Engine) {
 	api := router.Group("/cloudfox-api/v1")
-	api.GET("/login", controllers.LoginUser)
+	api.GET("/login", controllers.LoginController{}.LoginUser)
 }

@@ -1,4 +1,4 @@
-package repository
+package connectors
 
 import (
 	"context"
@@ -21,16 +21,17 @@ func NewPostgresSQLConnector(ctx context.Context) (*PGXConnector, error) {
 	user := os.Getenv("POSTGRESQL_USER")
 	dbPass := os.Getenv("POSTGRESQL_PASS")
 	dbname := os.Getenv("POSTGRESQL_DB_NAME")
+	sslmode := os.Getenv("POSTGRESQL_SSLMODE")
+
 	minConns := int32(1)
 	maxConns := int32(10)
-	sslmode := os.Getenv("POSTGRESQL_SSLMODE")
 
 	if host == "" || port == "" || user == "" || dbPass == "" || dbname == "" {
 		return nil, errors.New("missing required database environment variables")
 	}
 
 	if sslmode == "" {
-		sslmode = "require"
+		sslmode = "disable"
 	}
 
 	connectionString := fmt.Sprintf(
@@ -60,6 +61,14 @@ func NewPostgresSQLConnector(ctx context.Context) (*PGXConnector, error) {
 		maxConns = int32(v)
 	}
 
+	if minConns < 1 {
+		return nil, errors.New("POSTGRESQL_MIN_CONNS must be >= 1")
+	}
+
+	if maxConns < 1 {
+		return nil, errors.New("POSTGRESQL_MAX_CONNS must be >= 1")
+	}
+
 	if minConns > maxConns {
 		return nil, errors.New("MIN_CONNS cannot be greater than MAX_CONNS")
 	}
@@ -80,6 +89,10 @@ func NewPostgresSQLConnector(ctx context.Context) (*PGXConnector, error) {
 	}
 
 	return &PGXConnector{pool: pool}, nil
+}
+
+func (c *PGXConnector) Pool() *pgxpool.Pool {
+	return c.pool
 }
 
 func (c *PGXConnector) Close() {
