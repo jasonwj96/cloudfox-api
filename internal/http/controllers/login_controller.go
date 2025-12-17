@@ -22,7 +22,6 @@ func NewLoginController(
 
 type LoginRequest struct {
 	AccountID string `json:"accountId" binding:"required"`
-	// Password string `json:"password" binding:"required"` // next step
 }
 
 func (c *LoginController) LoginUser(ctx *gin.Context) {
@@ -39,6 +38,7 @@ func (c *LoginController) LoginUser(ctx *gin.Context) {
 		ctx.Request.Context(),
 		req.AccountID,
 	)
+
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "internal error",
@@ -56,7 +56,7 @@ func (c *LoginController) LoginUser(ctx *gin.Context) {
 	// TODO: verify password, MFA, issue JWT
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"id":       account.Id,
+		"id":       account.ID,
 		"username": account.Username,
 		"email":    account.Email,
 	})

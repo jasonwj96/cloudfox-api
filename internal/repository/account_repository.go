@@ -40,17 +40,17 @@ func (r *AccountRepository) GetByID(
 			email,
 			mfa_enabled,
 			mfa_type,
-			creation_date,
-			phone_number,
+			creationdate,
+			phonenumber,
 			active
-		FROM accounts
+		FROM cfx_accounts
 		WHERE id = $1
 	`
 
 	var acc model.Account
 
 	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&acc.Id,
+		&acc.ID,
 		&acc.Username,
 		&acc.Fullname,
 		&acc.PasswordHash,
