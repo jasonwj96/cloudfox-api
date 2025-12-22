@@ -3,41 +3,57 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"cloudfox-api/internal/http/controllers"
 	"cloudfox-api/internal/http/routes"
-	"cloudfox-api/internal/repository"
-	"cloudfox-api/internal/repository/connectors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	_ = godotenv.Load()
-
-	ctx := context.Background()
-
-	// 1. Create DB connector ONCE
-	connector, err := connectors.NewPostgresSQLConnector(ctx)
-	if err != nil {
+	if err := run(); err != nil {
 		log.Fatal(err)
 	}
-	defer connector.Close()
+}
 
-	// 2. Create repository
-	accountRepo := repository.NewAccountRepository(
-		connector.Pool(),
-	)
+func run() error {
+	if err := godotenv.Load(); err != nil {
+		slog.Error("no .env file found. Using default environment variables")
+	}
 
-	// 3. Create controller
-	loginController := controllers.NewLoginController(
-		accountRepo,
-	)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
-	// 4. Router + routes
-	router := gin.Default()
-	routes.RegisterRoutes(router, loginController)
+	router := gin.New()
+	router.Use(gin.Recovery())
 
-	_ = router.Run(":8080")
+	err := routes.RegisterRoutes(router, ctx)
+
+	if err != nil {
+		slog.Error(
+			"failed to execute operation",
+			slog.Any("err", err),
+		)
+	}
+
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	go func() {
+		<-ctx.Done()
+		_ = srv.Shutdown(context.Background())
+	}()
+
+	return srv.ListenAndServe()
 }

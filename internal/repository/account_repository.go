@@ -12,14 +12,15 @@ import (
 )
 
 type AccountRepository struct {
-	pool *pgxpool.Pool
+	postgresPool *pgxpool.Pool
 }
 
-func NewAccountRepository(pool *pgxpool.Pool) *AccountRepository {
+func NewAccountRepository(pool *pgxpool.Pool) (*AccountRepository, error) {
 	if pool == nil {
-		panic("AccountRepository: pool is nil")
+		return nil, errors.New("AccountRepository: postgresPool is nil")
 	}
-	return &AccountRepository{pool: pool}
+
+	return &AccountRepository{postgresPool: pool}, nil
 }
 
 func (r *AccountRepository) GetByID(
@@ -49,7 +50,7 @@ func (r *AccountRepository) GetByID(
 
 	var acc model.Account
 
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.postgresPool.QueryRow(ctx, query, id).Scan(
 		&acc.ID,
 		&acc.Username,
 		&acc.Fullname,

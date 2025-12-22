@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"cloudfox-api/internal/repository/connectors"
+	"context"
+	"errors"
 	"net/http"
 
 	"cloudfox-api/internal/repository"
@@ -12,12 +15,21 @@ type LoginController struct {
 	accountRepo *repository.AccountRepository
 }
 
-func NewLoginController(
-	accountRepo *repository.AccountRepository,
-) *LoginController {
-	return &LoginController{
-		accountRepo: accountRepo,
+func NewLoginController(ctx context.Context) (*LoginController, error) {
+
+	postgresConnector, err := connectors.NewPostgresSQLConnector(ctx)
+
+	if err != nil {
+		return nil, errors.New("error while creating the postgresConnector")
 	}
+
+	accountRepo, err := repository.NewAccountRepository(postgresConnector.Pool)
+
+	if err != nil {
+		return nil, errors.New("error while creating the account repository")
+	}
+
+	return &LoginController{accountRepo}, nil
 }
 
 type LoginRequest struct {
@@ -52,8 +64,6 @@ func (c *LoginController) LoginUser(ctx *gin.Context) {
 		})
 		return
 	}
-
-	// TODO: verify password, MFA, issue JWT
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"id":       account.ID,
