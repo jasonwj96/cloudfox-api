@@ -1,10 +1,6 @@
 package main
 
 import (
-	"cloudfox-api/internal/http/controllers"
-	"cloudfox-api/internal/http/routes"
-	"cloudfox-api/internal/repository"
-	"cloudfox-api/internal/repository/connectors"
 	"context"
 	"errors"
 	"log"
@@ -14,6 +10,11 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"cloudfox-api/internal/http/controllers"
+	"cloudfox-api/internal/http/routes"
+	"cloudfox-api/internal/repository"
+	"cloudfox-api/internal/repository/connectors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,24 +27,28 @@ func main() {
 }
 
 func run() error {
-
 	if err := godotenv.Load(); err != nil {
 		slog.Info("no .env file found; using environment variables")
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-
+	// Root context: ONLY for lifecycle & shutdown signaling
+	rootCtx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
 	defer stop()
+
+	// Infrastructure context: must not be signal-cancelled
+	infraCtx := context.Background()
 
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 
-	pgxConnector, err := connectors.NewPGXConnector(ctx)
-
+	pgxConnector, err := connectors.NewPGXConnector(infraCtx)
 	if err != nil {
 		return err
 	}
-
 	defer pgxConnector.Close()
 
 	accountRepository := repository.NewAccountRepository(pgxConnector)
@@ -60,14 +65,16 @@ func run() error {
 	}
 
 	go func() {
-		<-ctx.Done()
+		<-rootCtx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		_ = srv.Shutdown(shutdownCtx)
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			slog.Error("server shutdown failed", "err", err)
+		}
 	}()
 
-	err = srv.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 

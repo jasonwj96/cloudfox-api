@@ -107,9 +107,9 @@ func NewPGXConnector(ctx context.Context) (*PGXConnector, error) {
 		return nil, fmt.Errorf("parse pgxpool config: %w", err)
 	}
 
-	config.MaxConnLifetime = time.Hour
-	config.MaxConns = maxConns
 	config.MinConns = minConns
+	config.MaxConns = maxConns
+	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = 30 * time.Minute
 	config.HealthCheckPeriod = 1 * time.Minute
 
@@ -129,11 +129,7 @@ func NewPGXConnector(ctx context.Context) (*PGXConnector, error) {
 	return &PGXConnector{pool: pool}, nil
 }
 
-func (c *PGXConnector) QueryRow(
-	ctx context.Context,
-	sql string,
-	args ...any,
-) pgx.Row {
+func (c *PGXConnector) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
 	return c.pool.QueryRow(ctx, sql, args...)
 }
 
