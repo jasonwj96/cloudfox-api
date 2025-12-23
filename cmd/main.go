@@ -1,7 +1,12 @@
 package main
 
 import (
+	"cloudfox-api/internal/http/controllers"
+	"cloudfox-api/internal/http/routes"
+	"cloudfox-api/internal/repository"
+	"cloudfox-api/internal/repository/connectors"
 	"context"
+	"errors"
 	"log"
 	"log/slog"
 	"net/http"
@@ -9,8 +14,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"cloudfox-api/internal/http/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -23,24 +26,30 @@ func main() {
 }
 
 func run() error {
+
 	if err := godotenv.Load(); err != nil {
-		slog.Error("no .env file found. Using default environment variables")
+		slog.Info("no .env file found; using environment variables")
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
 	defer stop()
 
 	router := gin.New()
-	router.Use(gin.Recovery())
+	router.Use(gin.Logger(), gin.Recovery())
 
-	err := routes.RegisterRoutes(router, ctx)
+	pgxConnector, err := connectors.NewPGXConnector(ctx)
 
 	if err != nil {
-		slog.Error(
-			"failed to execute operation",
-			slog.Any("err", err),
-		)
+		return err
 	}
+
+	defer pgxConnector.Close()
+
+	accountRepository := repository.NewAccountRepository(pgxConnector)
+	loginController := controllers.NewLoginController(accountRepository)
+
+	routes.RegisterRoutes(router, loginController)
 
 	srv := &http.Server{
 		Addr:         ":8080",
@@ -52,8 +61,15 @@ func run() error {
 
 	go func() {
 		<-ctx.Done()
-		_ = srv.Shutdown(context.Background())
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	return srv.ListenAndServe()
+	err = srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	return nil
 }
