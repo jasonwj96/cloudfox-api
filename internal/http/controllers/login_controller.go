@@ -17,7 +17,27 @@ func NewLoginController(accountRepository *repository.AccountRepository) *LoginC
 }
 
 func (c *LoginController) LoginUser(ctx *gin.Context) {
+	accountID := "85f13ac1-9417-4b05-a577-fc5737bf330d"
+
+	account, err := c.accountRepository.GetById(ctx.Request.Context(), accountID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	if account == nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid credentials",
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "login ok",
+		"id":       account.ID,
+		"username": account.Username,
+		"email":    account.Email,
 	})
 }
