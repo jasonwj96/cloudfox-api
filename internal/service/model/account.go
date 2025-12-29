@@ -7,6 +7,7 @@ type Account struct {
 	Username         string
 	Fullname         string
 	PasswordHash     string
+	PasswordSalt     string
 	PasswordHashAlgo string
 	Email            string
 	MFAEnabled       bool

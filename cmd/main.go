@@ -27,28 +27,30 @@ func main() {
 }
 
 func run() error {
+
 	if err := godotenv.Load(); err != nil {
 		slog.Info("no .env file found; using environment variables")
 	}
 
-	// Root context: ONLY for lifecycle & shutdown signaling
 	rootCtx, stop := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
+
 	defer stop()
 
-	// Infrastructure context: must not be signal-cancelled
 	infraCtx := context.Background()
 
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 
 	pgxConnector, err := connectors.NewPGXConnector(infraCtx)
+
 	if err != nil {
 		return err
 	}
+
 	defer pgxConnector.Close()
 
 	accountRepository := repository.NewAccountRepository(pgxConnector)

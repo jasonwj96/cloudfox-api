@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"cloudfox-api/internal/crypto/argon2id"
 	"cloudfox-api/internal/repository/connectors"
 	"cloudfox-api/internal/service/model"
 
@@ -42,10 +43,34 @@ func (r *AccountRepository) GetById(ctx context.Context, id string) (*model.Acco
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // not found
+			return nil, nil
 		}
 		return nil, err
 	}
 
 	return &account, nil
+}
+
+func (r *AccountRepository) Create(ctx context.Context, account model.Account) error {
+
+	argon2Hasher := argon2id.Argon2Hasher{}
+	newPasswordHash, err := argon2Hasher.GenerateHash(account.PasswordHash)
+
+	if err != nil {
+		return err
+	}
+
+	err = r.pgxConnector.Exec(ctx, ``,
+		account.ID,
+		account.Username,
+		account.Fullname,
+		newPasswordHash,
+		account.PasswordSalt,
+		"argon2")
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
