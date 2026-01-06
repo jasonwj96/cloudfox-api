@@ -1,0 +1,34 @@
+package com.cloudfox.api.model;
+
+import jakarta.persistence.*;
+
+import java.math.BigInteger;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(name = "cfx_payments")
+public class Payment {
+
+    @Id
+    @GeneratedValue
+    private UUID id;
+
+    @Column(name = "public_id", nullable = false)
+    private UUID publicId;
+
+    @Column(name = "account_id", nullable = false)
+    private UUID accountId;
+
+    @Column(name = "amount_lowest_unit", nullable = false)
+    private BigInteger amountLowestUnit;
+
+    @Column(name = "currency", nullable = false)
+    private String currency;
+
+    @Column(name = "status", nullable = false)
+    private PaymentStatus status;
+
+    @Column(name = "creation_date", nullable = false)
+    private OffsetDateTime creationDate;
+}
