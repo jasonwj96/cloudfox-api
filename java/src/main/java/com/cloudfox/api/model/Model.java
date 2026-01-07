@@ -3,7 +3,7 @@ package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -24,7 +24,7 @@ public class Model {
     private int generatedTokens;
 
     @Column(name = "creation_date", nullable = false)
-    private OffsetDateTime creationDate;
+    private Instant creationDate;
 
     @Column(name = "file_name", nullable = false)
     private String fileName;
@@ -33,5 +33,5 @@ public class Model {
     private boolean active;
 
     @Column(name = "last_modified", nullable = false)
-    private OffsetDateTime lastModified;
+    private Instant lastModified;
 }

@@ -3,7 +3,7 @@ package com.cloudfox.api.model;
 import jakarta.persistence.*;
 
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -11,8 +11,8 @@ import java.util.UUID;
 public class Payment {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "public_id", nullable = false)
     private UUID publicId;
@@ -21,14 +21,14 @@ public class Payment {
     private UUID accountId;
 
     @Column(name = "amount_lowest_unit", nullable = false)
-    private BigInteger amountLowestUnit;
+    private int amountLowestUnit;
 
     @Column(name = "currency", nullable = false)
     private String currency;
 
     @Column(name = "status", nullable = false)
-    private PaymentStatus status;
+    private String status;
 
     @Column(name = "creation_date", nullable = false)
-    private OffsetDateTime creationDate;
+    private Instant creationDate;
 }

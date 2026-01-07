@@ -2,7 +2,7 @@ package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -23,7 +23,10 @@ public class Account {
     private String passwordHash;
 
     @Column(name = "password_salt", nullable = false)
-    private String passwordSalt;
+    private byte[] passwordSalt;
+
+    @Column(name = "password_hash_algo", nullable = false)
+    private String passwordHashAlgo;
 
     @Column(name = "email")
     private String email;
@@ -32,10 +35,10 @@ public class Account {
     private boolean mfaEnabled;
 
     @Column(name = "mfa_type", nullable = false)
-    private MFAType mfaType;
+    private String mfaType;
 
     @Column(name = "creation_date", nullable = false)
-    private OffsetDateTime creationDate;
+    private Instant creationDate;
 
     @Column(name = "phone_number")
     private String phoneNumber;
