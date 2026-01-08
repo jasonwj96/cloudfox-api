@@ -18,19 +18,19 @@ public class Account {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(length = 32, unique = true)
+    @Column(length = 32, nullable = false, unique = true)
     private String username;
 
-    @Column(length = 50)
+    @Column(length = 50, nullable = false)
     private String fullname;
 
-    @Column(name = "password_hash", unique = true)
+    @Column(name = "password_hash", nullable = false, unique = true)
     private String passwordHash;
 
     @Column(name = "password_salt", unique = true)
     private byte[] passwordSalt;
 
-    @Column(name = "password_hash_algo")
+    @Column(name = "password_hash_algo", nullable = false)
     private String passwordHashAlgo;
 
     @Column(length = 50, unique = true)
