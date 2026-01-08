@@ -1,48 +1,54 @@
 package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "cfx_accounts")
+@Getter
+@Setter
 public class Account {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "username", nullable = false)
+    @Column(length = 32, unique = true)
     private String username;
 
-    @Column(name = "fullname", nullable = false)
+    @Column(length = 50)
     private String fullname;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", unique = true)
     private String passwordHash;
 
-    @Column(name = "password_salt", nullable = false)
+    @Column(name = "password_salt", unique = true)
     private byte[] passwordSalt;
 
-    @Column(name = "password_hash_algo", nullable = false)
+    @Column(name = "password_hash_algo")
     private String passwordHashAlgo;
 
-    @Column(name = "email")
+    @Column(length = 50, unique = true)
     private String email;
 
-    @Column(name = "mfa_enabled", nullable = false)
-    private boolean mfaEnabled;
+    @Column(name = "mfa_enabled")
+    private boolean mfaEnabled = false;
 
-    @Column(name = "mfa_type", nullable = false)
+    @Column(name = "mfa_type", length = 30)
     private String mfaType;
 
-    @Column(name = "creation_date", nullable = false)
-    private Instant creationDate;
+    @Column(name = "creation_date")
+    private OffsetDateTime creationDate;
 
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
+    @Column(nullable = false)
+    private boolean active = false;
+
 }
