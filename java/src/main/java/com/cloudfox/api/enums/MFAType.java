@@ -1,4 +1,4 @@
-package com.cloudfox.api.model;
+package com.cloudfox.api.enums;
 
 
 import lombok.AllArgsConstructor;

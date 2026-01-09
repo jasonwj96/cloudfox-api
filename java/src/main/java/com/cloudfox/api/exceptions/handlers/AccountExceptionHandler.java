@@ -1,5 +1,6 @@
-package com.cloudfox.api.exceptions;
+package com.cloudfox.api.exceptions.handlers;
 
+import com.cloudfox.api.exceptions.AccountAlreadyExists;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -8,11 +9,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class AccountExceptionHandler {
 
     @ExceptionHandler(AccountAlreadyExists.class)
     public ResponseEntity<Map<String, Object>> handleAccountExists(AccountAlreadyExists ex) {
@@ -28,10 +29,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> fieldErrors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+            if (fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage()) != null) {
+                throw new IllegalStateException("Duplicate key");
+            }
+        }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
@@ -42,16 +46,4 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    // Optionally: catch-all for unexpected exceptions
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleAllOtherErrors(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of(
-                        "timestamp", Instant.now().toString(),
-                        "status", 500,
-                        "error", "Internal Server Error",
-                        "message", "An unexpected error occurred",
-                        "code", "ERR_INTERNAL"
-                ));
-    }
 }

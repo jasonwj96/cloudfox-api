@@ -2,13 +2,13 @@ package com.cloudfox.api.dto.response;
 
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccountResponse {
-    private String username;
-    private String fullname;
-    private String email;
+public class SessionResponse {
+    private UUID sessionToken;
 }

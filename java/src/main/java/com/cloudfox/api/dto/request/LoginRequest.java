@@ -12,9 +12,11 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountRequest {
+public class LoginRequest {
     private String username;
-    private String fullname;
-    private String email;
     private String password;
+    private String userAgent;
+    private String ipAddress;
+    private Instant expirationDate;
+    private UUID sessionToken;
 }
