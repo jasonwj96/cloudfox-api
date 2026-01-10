@@ -46,4 +46,8 @@ public class CryptoService {
             argon2.wipeArray(password);
         }
     }
+
+    public boolean verifyBcryptHash(String passwordHash, String password) {
+        return false;
+    }
 }

@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/cloudfox-api/v1/accounts/register",
-                                "/cloudfox-api/v1/auth/login"
+                                "/cloudfox-api/v1/session/login"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

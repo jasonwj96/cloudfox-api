@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum MFAType {
-    BCRYPT("bcrypt");
+    TEST("test");
 
     private final String value;
 }

@@ -1,14 +1,9 @@
 package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.AccountRequest;
-import com.cloudfox.api.dto.request.LoginRequest;
 import com.cloudfox.api.dto.response.AccountResponse;
-import com.cloudfox.api.dto.response.SessionResponse;
 import com.cloudfox.api.exceptions.AccountAlreadyExists;
-import com.cloudfox.api.exceptions.AccountNotFound;
-import com.cloudfox.api.exceptions.AccountSessionExists;
 import com.cloudfox.api.model.Account;
-import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -47,28 +42,7 @@ public class AccountService {
                 .build();
     }
 
-    public SessionResponse loginAccount(LoginRequest loginRequest) {
-        Optional<Account> account = accountRepository.findByUsername(loginRequest.getUsername());
-        SessionResponse response = new SessionResponse();
-
-        if (account.isPresent()) {
-            if (sessionService.accountSessionExists(account.get().getId())) {
-                throw new AccountSessionExists();
-            }
-
-            LoginSession session = sessionService.createSession(
-                    account.get().getId(),
-                    loginRequest.getUserAgent(),
-                    loginRequest.getIpAddress(),
-                    loginRequest.getExpirationDate()
-            );
-
-            response.setSessionToken(session.getSessionToken());
-        } else {
-            throw new AccountNotFound();
-        }
-
-
-        return response;
+    public Optional<Account> getAccountByUsername(String username) {
+        return accountRepository.findByUsername(username);
     }
 }
