@@ -10,10 +10,12 @@ import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.SessionsRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.common.security.auth.Login;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class SessionService {
                 .orElseThrow(AuthenticationException::new);
 
         HashAlgorithm algorithm;
+        SessionResponse response = new SessionResponse();
 
         try {
             algorithm = HashAlgorithm.valueOf(account.getPasswordHashAlgo().toUpperCase());
@@ -52,18 +55,21 @@ public class SessionService {
 
         LoginSession session = LoginSession.builder()
                 .accountId(account.getId())
+                .sessionToken(UUID.randomUUID())
                 .userAgent(request.getUserAgent())
                 .ipAddress(request.getIpAddress())
+                .creationDate(Instant.now())
                 .expirationDate(Instant.now().plus(30, ChronoUnit.DAYS))
                 .isActive(true)
                 .build();
 
         try {
-            sessionsRepository.save(session);
+            LoginSession newSession = sessionsRepository.save(session);
+            response.setSessionToken(newSession.getSessionToken());
         } catch (Exception e) {
             throw new SessionNotCreated();
         }
 
-        return new SessionResponse(session.getSessionToken());
+        return response;
     }
 }

@@ -29,16 +29,16 @@ public class LoginSession {
     @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(name = "ip_address", columnDefinition = "inet")
+    @Column(name = "ip_address")
     private String ipAddress;
 
-    @Column(name = "creation_date", nullable = false, updatable = false)
+    @Column(name = "creation_date", updatable = false)
     private Instant creationDate;
 
     @Column(name = "expiration_date", nullable = false)
     private Instant expirationDate;
 
-    @Column(name = "last_active_date", nullable = false)
+    @Column(name = "last_active_date")
     private Instant lastActiveDate;
 
     @Column(name = "is_active", nullable = false)
