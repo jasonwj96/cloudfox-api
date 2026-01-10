@@ -24,4 +24,10 @@ public class SessionController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(sessionService.createSession(request));
     }
+
+    @PostMapping("/validate")
+    public ResponseEntity<SessionResponse> refreshSession(@RequestBody @Valid SessionRequest request){
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(sessionService.refreshSession(request));
+    }
 }

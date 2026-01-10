@@ -40,9 +40,10 @@ public interface SessionsRepository extends JpaRepository<LoginSession, UUID> {
     @Modifying
     @Query("""
                 UPDATE LoginSession s
-                SET s.lastActiveDate = :now
+                SET s.lastActiveDate = :now,
+                s.expirationDate = :expirationDate
                 WHERE s.sessionToken = :token
                   AND s.isActive = true
             """)
-    void refreshExpirationDate(UUID token, Instant now);
+    void refreshExpirationDate(UUID token, Instant now, Instant expirationDate);
 }

@@ -2,6 +2,7 @@ package com.cloudfox.api.dto.response;
 
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -11,4 +12,5 @@ import java.util.UUID;
 @Builder
 public class SessionResponse {
     private UUID sessionToken;
+    private Instant expirationDate;
 }

@@ -4,17 +4,21 @@ import com.cloudfox.api.dto.request.SessionRequest;
 import com.cloudfox.api.dto.response.SessionResponse;
 import com.cloudfox.api.enums.HashAlgorithm;
 import com.cloudfox.api.exceptions.AuthenticationException;
+import com.cloudfox.api.exceptions.InvalidSessionToken;
 import com.cloudfox.api.exceptions.SessionNotCreated;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.SessionsRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.common.security.auth.Login;
+import org.hibernate.query.common.TemporalUnit;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.UUID;
 
 @Service
@@ -71,5 +75,22 @@ public class SessionService {
         }
 
         return response;
+    }
+
+    @Transactional
+    public SessionResponse refreshSession(@Valid SessionRequest request) {
+        sessionsRepository.refreshExpirationDate(request.getSessionToken(),
+                Instant.now(),
+                Instant.now().plus(30, ChronoUnit.DAYS));
+
+        LoginSession session = sessionsRepository
+                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
+                        request.getSessionToken(), Instant.now())
+                .orElseThrow(InvalidSessionToken::new);
+
+        return SessionResponse.builder()
+                .sessionToken(session.getSessionToken())
+                .expirationDate(session.getExpirationDate())
+                .build();
     }
 }
