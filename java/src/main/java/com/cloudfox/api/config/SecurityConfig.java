@@ -22,7 +22,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/cloudfox-api/v1/accounts/register",
                                 "/cloudfox-api/v1/session/login",
-                                "/cloudfox-api/v1/session/validate"
+                                "/cloudfox-api/v1/session/validate",
+                                "/cloudfox-api/v1/model/find/id",
+                                "/cloudfox-api/v1/model/find/accountid",
+                                "/cloudfox-api/v1/model/create"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

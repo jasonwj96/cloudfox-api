@@ -9,23 +9,21 @@ import com.cloudfox.api.exceptions.SessionNotCreated;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
-import com.cloudfox.api.repository.SessionsRepository;
+import com.cloudfox.api.repository.SessionRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.common.TemporalUnit;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SessionService {
 
-    private final SessionsRepository sessionsRepository;
+    private final SessionRepository sessionRepository;
     private final AccountRepository accountRepository;
     private final CryptoService cryptoService;
 
@@ -68,7 +66,7 @@ public class SessionService {
                 .build();
 
         try {
-            LoginSession newSession = sessionsRepository.save(session);
+            LoginSession newSession = sessionRepository.save(session);
             response.setSessionToken(newSession.getSessionToken());
         } catch (Exception e) {
             throw new SessionNotCreated();
@@ -79,11 +77,11 @@ public class SessionService {
 
     @Transactional
     public SessionResponse refreshSession(@Valid SessionRequest request) {
-        sessionsRepository.refreshExpirationDate(request.getSessionToken(),
+        sessionRepository.refreshExpirationDate(request.getSessionToken(),
                 Instant.now(),
                 Instant.now().plus(30, ChronoUnit.DAYS));
 
-        LoginSession session = sessionsRepository
+        LoginSession session = sessionRepository
                 .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
                         request.getSessionToken(), Instant.now())
                 .orElseThrow(InvalidSessionToken::new);

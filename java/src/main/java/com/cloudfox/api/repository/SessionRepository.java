@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface SessionsRepository extends JpaRepository<LoginSession, UUID> {
+public interface SessionRepository extends JpaRepository<LoginSession, UUID> {
 
     Optional<LoginSession> findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
             UUID sessionToken,

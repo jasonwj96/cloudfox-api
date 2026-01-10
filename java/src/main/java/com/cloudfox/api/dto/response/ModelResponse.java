@@ -7,8 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AccountResponse {
-    private String username;
-    private String fullname;
-    private String email;
+public class ModelResponse {
+    private String name;
+    private String fileName;
 }
