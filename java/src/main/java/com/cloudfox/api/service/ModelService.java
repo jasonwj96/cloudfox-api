@@ -11,7 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -31,16 +35,36 @@ public class ModelService {
                         request.getSessionToken(), Instant.now());
 
         if (session.isPresent()) {
-            Model newModel = Model.builder()
-                    .accountId(session.get().getAccountId())
-                    .name(request.getModelName())
-                    .fileName(request.getFileName())
-                    .active(true)
-                    .build();
+            try {
+                MultipartFile file = request.getFilePayload();
 
-            newModel = modelRepository.save(newModel);
-            response.setName(newModel.getName());
-            response.setFileName(newModel.getFileName());
+                if (file == null || file.isEmpty()) {
+                    throw new IllegalArgumentException("File payload is required");
+                }
+
+                Path baseDir = Path.of(
+                        "model-artifacts",
+                        session.get().getAccountId().toString()
+                );
+
+                Files.createDirectories(baseDir);
+
+                Path target = baseDir.resolve(request.getFileName());
+                file.transferTo(target);
+
+                Model newModel = Model.builder()
+                        .accountId(session.get().getAccountId())
+                        .name(request.getModelName())
+                        .fileName(request.getFileName())
+                        .active(true)
+                        .build();
+
+                newModel = modelRepository.save(newModel);
+                response.setName(newModel.getName());
+                response.setFileName(newModel.getFileName());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             throw new SessionAuthenticationException("Session does not exist");
         }

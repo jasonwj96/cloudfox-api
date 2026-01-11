@@ -1,6 +1,7 @@
 package com.cloudfox.api.dto.request;
 
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -15,5 +16,6 @@ public class ModelRequest {
     private String accountId;
     private String modelName;
     private String fileName;
+    private MultipartFile filePayload;
     private boolean modelStatus;
 }
