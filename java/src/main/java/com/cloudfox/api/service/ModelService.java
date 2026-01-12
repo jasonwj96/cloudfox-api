@@ -25,6 +25,7 @@ public class ModelService {
 
     private final ModelRepository modelRepository;
     private final SessionRepository sessionRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public ModelResponse createModel(ModelRequest request) {
@@ -35,22 +36,10 @@ public class ModelService {
                         request.getSessionToken(), Instant.now());
 
         if (session.isPresent()) {
-            try {
-                MultipartFile file = request.getFilePayload();
 
-                if (file == null || file.isEmpty()) {
-                    throw new IllegalArgumentException("File payload is required");
-                }
+                String s3Key = session.get().getAccountId() + "/" + request.getFileName();
 
-                Path baseDir = Path.of(
-                        "model-artifacts",
-                        session.get().getAccountId().toString()
-                );
-
-                Files.createDirectories(baseDir);
-
-                Path target = baseDir.resolve(request.getFileName());
-                file.transferTo(target);
+                s3Service.saveFile(request.getFilePayload(), s3Key);
 
                 Model newModel = Model.builder()
                         .accountId(session.get().getAccountId())
@@ -62,9 +51,7 @@ public class ModelService {
                 newModel = modelRepository.save(newModel);
                 response.setName(newModel.getName());
                 response.setFileName(newModel.getFileName());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
         } else {
             throw new SessionAuthenticationException("Session does not exist");
         }
