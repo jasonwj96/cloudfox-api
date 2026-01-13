@@ -38,6 +38,9 @@ public class Model {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
+    @Column(name = "framework", nullable = false)
+    private String framework;
+
     @Column(name = "active", nullable = false)
     private boolean active;
 

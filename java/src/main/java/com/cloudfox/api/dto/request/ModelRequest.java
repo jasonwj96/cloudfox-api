@@ -16,6 +16,7 @@ public class ModelRequest {
     private String accountId;
     private String modelName;
     private String fileName;
+    private String framework;
     private MultipartFile filePayload;
     private boolean modelStatus;
 }

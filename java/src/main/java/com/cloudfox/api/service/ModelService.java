@@ -45,6 +45,7 @@ public class ModelService {
                         .accountId(session.get().getAccountId())
                         .name(request.getModelName())
                         .fileName(request.getFileName())
+                        .framework(request.getFramework())
                         .active(true)
                         .build();
 
