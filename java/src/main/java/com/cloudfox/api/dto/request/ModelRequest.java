@@ -11,7 +11,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ModelRequest {
-    private UUID sessionToken;
     private UUID modelId;
     private String accountId;
     private String modelName;

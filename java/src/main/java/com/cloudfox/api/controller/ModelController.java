@@ -1,6 +1,5 @@
 package com.cloudfox.api.controller;
 
-
 import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelResponse;
 import com.cloudfox.api.service.ModelService;
@@ -10,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/cloudfox-api/v1/model")
@@ -21,20 +22,30 @@ public class ModelController {
     @PostMapping(
             value = "/create",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ModelResponse> createModel(@ModelAttribute @Valid ModelRequest request) {
+    public ResponseEntity<ModelResponse> createModel(
+            @CookieValue("SESSION") UUID sessionToken,
+            @ModelAttribute @Valid ModelRequest request
+    ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(modelService.createModel(request));
+                .body(modelService.createModel(sessionToken, request));
     }
 
     @PostMapping("/find-by-id")
-    public ResponseEntity<ModelResponse> findById(@RequestBody ModelRequest request) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(modelService.getAccountModel(request));
+    public ResponseEntity<ModelResponse> findById(
+            @CookieValue("SESSION") UUID sessionToken,
+            @RequestBody ModelRequest request
+    ) {
+        return ResponseEntity.ok(
+                modelService.getAccountModel(sessionToken, request)
+        );
     }
 
     @PostMapping("/find-by-account-id")
-    public ResponseEntity<ModelResponse> findByAccountId(@RequestBody ModelRequest request) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(modelService.getAccountModels(request));
+    public ResponseEntity<ModelResponse> findByAccountId(
+            @CookieValue("SESSION") UUID sessionToken
+    ) {
+        return ResponseEntity.ok(
+                modelService.getAccountModels(sessionToken)
+        );
     }
 }

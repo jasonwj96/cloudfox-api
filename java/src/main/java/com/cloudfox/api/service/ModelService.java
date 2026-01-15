@@ -3,7 +3,7 @@ package com.cloudfox.api.service;
 import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.dto.response.ModelResponse;
-import com.cloudfox.api.model.Account;
+import com.cloudfox.api.exceptions.InvalidSessionToken;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.model.Model;
 import com.cloudfox.api.repository.AccountRepository;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,36 +29,33 @@ public class ModelService {
     private final AccountRepository accountRepository;
 
     @Transactional
-    public ModelResponse createModel(ModelRequest request) {
-        ModelResponse response = new ModelResponse();
+    public ModelResponse createModel(UUID sessionToken, ModelRequest request) {
 
-        Optional<LoginSession> session = sessionRepository
+        LoginSession session = sessionRepository
                 .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        request.getSessionToken(), Instant.now());
+                        sessionToken, Instant.now())
+                .orElseThrow(() ->
+                        new SessionAuthenticationException("Invalid session"));
 
-        if (session.isPresent()) {
-            String s3Key = session.get().getAccountId() + "/" + request.getFileName();
+        String s3Key = session.getAccountId() + "/" + request.getFileName();
+        s3Service.saveFile(request.getFilePayload(), s3Key);
 
-            s3Service.saveFile(request.getFilePayload(), s3Key);
+        Model model = Model.builder()
+                .accountId(session.getAccountId())
+                .name(request.getModelName())
+                .fileName(request.getFileName())
+                .framework(request.getFramework())
+                .active(true)
+                .build();
 
-            Model newModel = Model.builder()
-                    .accountId(session.get().getAccountId())
-                    .name(request.getModelName())
-                    .fileName(request.getFileName())
-                    .framework(request.getFramework())
-                    .active(true)
-                    .build();
+        model = modelRepository.save(model);
 
-            newModel = modelRepository.save(newModel);
-            response.setName(newModel.getName());
-            response.setFileName(newModel.getFileName());
-
-        } else {
-            throw new SessionAuthenticationException("Session does not exist");
-        }
-
-        return response;
+        return ModelResponse.builder()
+                .name(model.getName())
+                .fileName(model.getFileName())
+                .build();
     }
+
 
     @Transactional
     public ModelResponse addGeneratedTokens(ModelRequest modelRequest) {
@@ -74,20 +71,45 @@ public class ModelService {
         return response;
     }
 
-    public ModelResponse getAccountModel(ModelRequest request) {
-        ModelResponse response = new ModelResponse();
+    public ModelResponse getAccountModel(UUID sessionToken, ModelRequest request) {
 
-        Optional<LoginSession> session = sessionRepository
+        LoginSession session = sessionRepository
                 .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        request.getSessionToken(), Instant.now());
+                        sessionToken, Instant.now())
+                .orElseThrow(InvalidSessionToken::new);
 
-        if (session.isPresent()) {
-            Optional<Account> account = accountRepository.findById(session.get().getAccountId());
-            if (account.isPresent()) {
-                Model model = modelRepository.findModelByIdAndAccountId(
-                        request.getModelId(), account.get().getId());
+        Model model = modelRepository.findModelByIdAndAccountId(
+                request.getModelId(),
+                session.getAccountId()
+        );
 
-                ModelDTO modelDTO = ModelDTO.builder()
+        ModelDTO dto = ModelDTO.builder()
+                .id(model.getId())
+                .accountId(model.getAccountId())
+                .name(model.getName())
+                .generatedTokens(model.getGeneratedTokens())
+                .creationDate(model.getCreationDate())
+                .fileName(model.getFileName())
+                .framework(model.getFramework())
+                .active(model.isActive())
+                .build();
+
+        return ModelResponse.builder()
+                .model(dto)
+                .build();
+    }
+
+    public ModelResponse getAccountModels(UUID sessionToken) {
+
+        LoginSession session = sessionRepository
+                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
+                        sessionToken, Instant.now())
+                .orElseThrow(InvalidSessionToken::new);
+
+        List<ModelDTO> models = modelRepository
+                .findModelByAccountId(session.getAccountId())
+                .stream()
+                .map(model -> ModelDTO.builder()
                         .id(model.getId())
                         .accountId(model.getAccountId())
                         .name(model.getName())
@@ -96,48 +118,12 @@ public class ModelService {
                         .fileName(model.getFileName())
                         .framework(model.getFramework())
                         .active(model.isActive())
-                        .build();
+                        .lastModified(model.getLastModified())
+                        .build())
+                .toList();
 
-                response.setModel(modelDTO);
-            }
-        }
-
-        return response;
-    }
-
-
-    public ModelResponse getAccountModels(ModelRequest request) {
-        ModelResponse response = new ModelResponse();
-
-        Optional<LoginSession> session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        request.getSessionToken(), Instant.now());
-
-        if (session.isPresent()) {
-            Optional<Account> account = accountRepository.findById(session.get().getAccountId());
-            if (account.isPresent()) {
-                List<Model> models = modelRepository
-                        .findModelByAccountId(account.get().getId());
-
-                List<ModelDTO> modelDTOList = models.stream()
-                        .map(model -> ModelDTO.builder()
-                                .id(model.getId())
-                                .accountId(model.getAccountId())
-                                .name(model.getName())
-                                .generatedTokens(model.getGeneratedTokens())
-                                .creationDate(model.getCreationDate())
-                                .fileName(model.getFileName())
-                                .framework(model.getFramework())
-                                .active(model.isActive())
-                                .lastModified(model.getLastModified())
-                                .build()
-                        )
-                        .toList();
-
-                response.setModels(modelDTOList);
-            }
-        }
-
-        return response;
+        return ModelResponse.builder()
+                .models(models)
+                .build();
     }
 }

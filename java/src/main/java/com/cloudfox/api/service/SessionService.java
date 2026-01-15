@@ -5,7 +5,6 @@ import com.cloudfox.api.dto.response.SessionResponse;
 import com.cloudfox.api.enums.HashAlgorithm;
 import com.cloudfox.api.exceptions.AuthenticationException;
 import com.cloudfox.api.exceptions.InvalidSessionToken;
-import com.cloudfox.api.exceptions.SessionNotCreated;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
@@ -27,18 +26,13 @@ public class SessionService {
     private final AccountRepository accountRepository;
     private final CryptoService cryptoService;
 
-    public SessionResponse createSession(SessionRequest request) {
+    public LoginSession createSession(SessionRequest request) {
         Account account = accountRepository.findByUsername(request.getUsername())
                 .orElseThrow(AuthenticationException::new);
 
-        HashAlgorithm algorithm;
-        SessionResponse response = new SessionResponse();
-
-        try {
-            algorithm = HashAlgorithm.valueOf(account.getPasswordHashAlgo().toUpperCase());
-        } catch (Exception e) {
-            throw new IllegalStateException("Unsupported hash algorithm");
-        }
+        HashAlgorithm algorithm = HashAlgorithm.valueOf(
+                account.getPasswordHashAlgo().toUpperCase()
+        );
 
         boolean hashIsValid = switch (algorithm) {
             case ARGON2 -> cryptoService.verifyArgon2Hash(
@@ -65,14 +59,7 @@ public class SessionService {
                 .isActive(true)
                 .build();
 
-        try {
-            LoginSession newSession = sessionRepository.save(session);
-            response.setSessionToken(newSession.getSessionToken());
-        } catch (Exception e) {
-            throw new SessionNotCreated();
-        }
-
-        return response;
+        return sessionRepository.save(session);
     }
 
     @Transactional
@@ -87,7 +74,6 @@ public class SessionService {
                 .orElseThrow(InvalidSessionToken::new);
 
         return SessionResponse.builder()
-                .sessionToken(session.getSessionToken())
                 .expirationDate(session.getExpirationDate())
                 .build();
     }

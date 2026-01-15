@@ -2,7 +2,6 @@ package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
 
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.UUID;
 
