@@ -4,6 +4,7 @@ import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.dto.response.ModelResponse;
 import com.cloudfox.api.exceptions.InvalidSessionToken;
+import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.model.Model;
 import com.cloudfox.api.repository.AccountRepository;
@@ -37,11 +38,15 @@ public class ModelService {
                 .orElseThrow(() ->
                         new SessionAuthenticationException("Invalid session"));
 
-        String s3Key = session.getAccountId() + "/" + request.getFileName();
+        Account account = accountRepository.findById(session.getAccountId())
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Account not found"));
+
+        String s3Key = account.getId() + "/" + request.getFileName();
         s3Service.saveFile(request.getFilePayload(), s3Key);
 
         Model model = Model.builder()
-                .accountId(session.getAccountId())
+                .account(account)   // ← THIS is the fix
                 .name(request.getModelName())
                 .fileName(request.getFileName())
                 .framework(request.getFramework())
@@ -55,7 +60,6 @@ public class ModelService {
                 .fileName(model.getFileName())
                 .build();
     }
-
 
     @Transactional
     public ModelResponse addGeneratedTokens(ModelRequest modelRequest) {
@@ -85,7 +89,7 @@ public class ModelService {
 
         ModelDTO dto = ModelDTO.builder()
                 .id(model.getId())
-                .accountId(model.getAccountId())
+                .accountName(model.getAccount().getUsername())
                 .name(model.getName())
                 .generatedTokens(model.getGeneratedTokens())
                 .creationDate(model.getCreationDate())
@@ -106,24 +110,12 @@ public class ModelService {
                         sessionToken, Instant.now())
                 .orElseThrow(InvalidSessionToken::new);
 
-        List<ModelDTO> models = modelRepository
-                .findModelByAccountId(session.getAccountId())
-                .stream()
-                .map(model -> ModelDTO.builder()
-                        .id(model.getId())
-                        .accountId(model.getAccountId())
-                        .name(model.getName())
-                        .generatedTokens(model.getGeneratedTokens())
-                        .creationDate(model.getCreationDate())
-                        .fileName(model.getFileName())
-                        .framework(model.getFramework())
-                        .active(model.isActive())
-                        .lastModified(model.getLastModified())
-                        .build())
-                .toList();
-
         return ModelResponse.builder()
-                .models(models)
+                .models(
+                        modelRepository.findModelsWithAccountName(
+                                session.getAccountId()
+                        )
+                )
                 .build();
     }
 }

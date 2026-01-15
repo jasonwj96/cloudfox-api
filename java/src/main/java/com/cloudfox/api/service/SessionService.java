@@ -62,6 +62,15 @@ public class SessionService {
         return sessionRepository.save(session);
     }
 
+    public LoginSession findValidSession(UUID sessionToken) {
+        return sessionRepository
+                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
+                        sessionToken,
+                        Instant.now()
+                )
+                .orElse(null);
+    }
+    
     @Transactional
     public SessionResponse refreshSession(@Valid SessionRequest request) {
         sessionRepository.refreshExpirationDate(request.getSessionToken(),

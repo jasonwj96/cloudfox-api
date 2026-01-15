@@ -35,7 +35,6 @@ public class IdempotentOperation {
 
     @Column(name = "response_body", nullable = false, columnDefinition = "jsonb")
     private String responseBody;
-    // or JsonNode if you prefer
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

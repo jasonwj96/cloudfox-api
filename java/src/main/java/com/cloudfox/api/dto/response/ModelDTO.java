@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 public class ModelDTO {
     private UUID id;
-    private UUID accountId;
+    private String accountName;
     private String name;
     private int generatedTokens;
     private Instant creationDate;

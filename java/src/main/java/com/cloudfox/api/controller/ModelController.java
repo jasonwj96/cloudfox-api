@@ -40,7 +40,7 @@ public class ModelController {
         );
     }
 
-    @PostMapping("/find-by-account-id")
+    @GetMapping("/find-by-account")
     public ResponseEntity<ModelResponse> findByAccountId(
             @CookieValue("SESSION") UUID sessionToken
     ) {

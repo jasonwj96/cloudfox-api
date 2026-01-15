@@ -23,20 +23,29 @@ public class SessionController {
 
     @PostMapping("/login")
     public ResponseEntity<SessionResponse> loginAccount(
+            @CookieValue(name = "SESSION", required = false) UUID sessionToken,
             @RequestBody @Valid SessionRequest request,
             HttpServletResponse response
     ) {
-        LoginSession session = sessionService.createSession(request);
+        LoginSession session = null;
 
-        ResponseCookie cookie = ResponseCookie.from("SESSION", session.getSessionToken().toString())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("Strict")
-                .maxAge(30 * 24 * 60 * 60)
-                .build();
+        if (sessionToken != null) {
+            session = sessionService.findValidSession(sessionToken);
+        }
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        if (session == null) {
+            session = sessionService.createSession(request);
+
+            ResponseCookie cookie = ResponseCookie.from("SESSION", session.getSessionToken().toString())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(30 * 24 * 60 * 60)
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        }
 
         return ResponseEntity.ok(
                 SessionResponse.builder()
@@ -44,7 +53,6 @@ public class SessionController {
                         .build()
         );
     }
-
 
     @PostMapping("/validate")
     public ResponseEntity<SessionResponse> refreshSession(
