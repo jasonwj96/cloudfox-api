@@ -18,5 +18,5 @@ public class ModelRequest {
     private String fileName;
     private String framework;
     private MultipartFile filePayload;
-    private boolean modelStatus;
+    private Boolean modelStatus;
 }

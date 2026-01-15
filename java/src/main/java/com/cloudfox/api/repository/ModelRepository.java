@@ -11,7 +11,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ModelRepository extends JpaRepository<Model, UUID> {
-    List<Model> findModelBy(UUID id);
+    Model findModelByIdAndAccountId(UUID id, UUID accountId);
+
+    List<Model> findModelByAccountId(UUID accountId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

@@ -25,4 +25,16 @@ public class ModelController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(modelService.createModel(request));
     }
+
+    @PostMapping("/find-by-id")
+    public ResponseEntity<ModelResponse> findById(@RequestBody ModelRequest request) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(modelService.getAccountModel(request));
+    }
+
+    @PostMapping("/find-by-account-id")
+    public ResponseEntity<ModelResponse> findByAccountId(@RequestBody ModelRequest request) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(modelService.getAccountModels(request));
+    }
 }
