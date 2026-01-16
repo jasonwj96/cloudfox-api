@@ -1,6 +1,7 @@
 package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.OffsetDateTime;
 
@@ -15,6 +16,11 @@ import java.time.OffsetDateTime;
                 columnList = "idempotency_key, operation"
         )
 )
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class IdempotentOperation {
 
     @Id

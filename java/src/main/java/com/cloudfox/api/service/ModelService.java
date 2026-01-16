@@ -46,7 +46,7 @@ public class ModelService {
         s3Service.saveFile(request.getFilePayload(), s3Key);
 
         Model model = Model.builder()
-                .account(account)   // ← THIS is the fix
+                .account(account)
                 .name(request.getModelName())
                 .fileName(request.getFileName())
                 .framework(request.getFramework())

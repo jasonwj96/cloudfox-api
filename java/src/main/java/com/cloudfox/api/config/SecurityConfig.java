@@ -27,7 +27,9 @@ public class SecurityConfig {
                                 "/cloudfox-api/v1/model/find/accountid",
                                 "/cloudfox-api/v1/model/create",
                                 "/cloudfox-api/v1/model/find-by-id",
-                                "/cloudfox-api/v1/model/find-by-account"
+                                "/cloudfox-api/v1/model/find-by-account",
+                                "/cloudfox-api/v1/payment/intent"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

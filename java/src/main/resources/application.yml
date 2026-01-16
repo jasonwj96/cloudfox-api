@@ -12,3 +12,5 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}
