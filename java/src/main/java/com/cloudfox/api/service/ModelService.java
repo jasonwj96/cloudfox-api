@@ -42,13 +42,13 @@ public class ModelService {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Account not found"));
 
-        String s3Key = account.getId() + "/" + request.getFileName();
+        String s3Key = account.getId() + "/" + request.getFilePayload().getOriginalFilename();
         s3Service.saveFile(request.getFilePayload(), s3Key);
 
         Model model = Model.builder()
                 .account(account)
                 .name(request.getModelName())
-                .fileName(request.getFileName())
+                .fileName(request.getFilePayload().getOriginalFilename())
                 .framework(request.getFramework())
                 .active(true)
                 .build();
