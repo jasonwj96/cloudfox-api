@@ -54,16 +54,10 @@ public class SessionController {
         );
     }
 
-    @PostMapping("/validate")
+    @GetMapping("/get-account-by-session")
     public ResponseEntity<SessionResponse> refreshSession(
-            @CookieValue("SESSION") UUID sessionToken
-    ) {
-        SessionResponse response = sessionService.refreshSession(
-                SessionRequest.builder()
-                        .sessionToken(sessionToken)
-                        .build()
-        );
-
+            @CookieValue("SESSION") UUID sessionToken) {
+        SessionResponse response = sessionService.getAccountBySession(sessionToken);
         return ResponseEntity.ok(response);
     }
 }

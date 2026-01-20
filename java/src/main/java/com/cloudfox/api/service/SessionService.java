@@ -70,20 +70,15 @@ public class SessionService {
                 )
                 .orElse(null);
     }
-    
+
     @Transactional
-    public SessionResponse refreshSession(@Valid SessionRequest request) {
-        sessionRepository.refreshExpirationDate(request.getSessionToken(),
-                Instant.now(),
+    public void refresh(UUID sessionToken) {
+        sessionRepository.refreshExpirationDate(sessionToken, Instant.now(),
                 Instant.now().plus(30, ChronoUnit.DAYS));
+    }
 
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        request.getSessionToken(), Instant.now())
-                .orElseThrow(InvalidSessionToken::new);
-
-        return SessionResponse.builder()
-                .expirationDate(session.getExpirationDate())
-                .build();
+    public SessionResponse getAccountBySession(UUID sessionToken) {
+        SessionResponse response = new SessionResponse();
+        return response;
     }
 }

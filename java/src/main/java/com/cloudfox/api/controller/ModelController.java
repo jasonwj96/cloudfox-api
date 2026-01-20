@@ -48,4 +48,16 @@ public class ModelController {
                 modelService.getAccountModels(sessionToken)
         );
     }
+
+    @DeleteMapping("/{modelId}")
+    public ResponseEntity<Void> deleteById(
+            @CookieValue("SESSION") UUID sessionToken,
+            @PathVariable UUID modelId) {
+
+        int rowsAffected = modelService.deleteModel(sessionToken, modelId);
+
+        return rowsAffected > 0
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
 }

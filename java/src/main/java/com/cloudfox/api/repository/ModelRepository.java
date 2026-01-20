@@ -37,4 +37,12 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
                 WHERE m.id = :modelId
             """)
     int incrementGeneratedTokens(UUID modelId, int amount);
+
+    @Modifying
+    @Query("""
+                DELETE FROM Model m
+                WHERE m.id = :modelId
+                  AND m.account.id = :accountId
+            """)
+    int deleteByIdAndAccountId(UUID modelId, UUID accountId);
 }

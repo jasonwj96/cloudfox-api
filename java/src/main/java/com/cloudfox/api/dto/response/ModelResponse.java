@@ -14,4 +14,5 @@ public class ModelResponse {
     private String fileName;
     private List<ModelDTO> models;
     private ModelDTO model;
+    private int rowsAffected;
 }

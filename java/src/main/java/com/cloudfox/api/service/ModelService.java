@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -50,7 +51,7 @@ public class ModelService {
                 .name(request.getModelName())
                 .fileName(request.getFilePayload().getOriginalFilename())
                 .framework(request.getFramework())
-                .active(true)
+                .active(request.getModelStatus())
                 .build();
 
         model = modelRepository.save(model);
@@ -117,5 +118,17 @@ public class ModelService {
                         )
                 )
                 .build();
+    }
+
+    public int deleteModel(UUID sessionToken, UUID modelId) {
+        LoginSession session = sessionRepository
+                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
+                        sessionToken, Instant.now())
+                .orElseThrow(InvalidSessionToken::new);
+
+        return modelRepository.deleteByIdAndAccountId(
+                modelId,
+                session.getAccountId()
+        );
     }
 }

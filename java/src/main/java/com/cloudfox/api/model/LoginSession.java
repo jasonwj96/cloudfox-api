@@ -23,7 +23,7 @@ public class LoginSession {
     @Column(name = "account_id", nullable = false)
     private UUID accountId;
 
-    @Column(name = "session_token", nullable = false)
+    @Column(name = "session_token", nullable = false, unique = true)
     private UUID sessionToken;
 
     @Column(name = "user_agent")
