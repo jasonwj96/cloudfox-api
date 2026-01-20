@@ -22,6 +22,6 @@ public class SessionAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return accountId;
+        return this.accountId;
     }
 }

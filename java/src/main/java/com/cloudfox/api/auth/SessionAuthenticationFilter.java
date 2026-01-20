@@ -25,21 +25,21 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
+
             Cookie[] cookies = request.getCookies();
+
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if ("SESSION".equals(cookie.getName())) {
                         try {
-                            UUID token = UUID.fromString(cookie.getValue());
-                            UUID accountId = sessionService.findValidSession(token).getAccountId();
+                            UUID accountId = sessionService
+                                    .findValidSession(UUID.fromString(cookie.getValue()))
+                                    .getAccountId();
 
                             if (accountId != null) {
-                                SessionAuthentication auth =
-                                        new SessionAuthentication(accountId);
                                 SecurityContextHolder.getContext()
-                                        .setAuthentication(auth);
+                                        .setAuthentication(new SessionAuthentication(accountId));
                             }
                         } catch (IllegalArgumentException ignored) {
 

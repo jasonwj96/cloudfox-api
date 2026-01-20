@@ -31,19 +31,13 @@ public class ModelService {
     private final AccountRepository accountRepository;
 
     @Transactional
-    public ModelResponse createModel(UUID sessionToken, ModelRequest request) {
+    public ModelResponse createModel(UUID accountId, ModelRequest request) {
 
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        sessionToken, Instant.now())
-                .orElseThrow(() ->
-                        new SessionAuthenticationException("Invalid session"));
-
-        Account account = accountRepository.findById(session.getAccountId())
+        Account account = accountRepository.findById(accountId)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Account not found"));
 
-        String s3Key = account.getId() + "/" + request.getFilePayload().getOriginalFilename();
+        String s3Key = accountId + "/" + request.getFilePayload().getOriginalFilename();
         s3Service.saveFile(request.getFilePayload(), s3Key);
 
         Model model = Model.builder()
@@ -76,17 +70,11 @@ public class ModelService {
         return response;
     }
 
-    public ModelResponse getAccountModel(UUID sessionToken, ModelRequest request) {
-
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        sessionToken, Instant.now())
-                .orElseThrow(InvalidSessionToken::new);
+    public ModelResponse getAccountModel(UUID accountId, ModelRequest request) {
 
         Model model = modelRepository.findModelByIdAndAccountId(
                 request.getModelId(),
-                session.getAccountId()
-        );
+                accountId);
 
         ModelDTO dto = ModelDTO.builder()
                 .id(model.getId())
@@ -104,31 +92,16 @@ public class ModelService {
                 .build();
     }
 
-    public ModelResponse getAccountModels(UUID sessionToken) {
-
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        sessionToken, Instant.now())
-                .orElseThrow(InvalidSessionToken::new);
-
+    public ModelResponse getAccountModels(UUID accountId) {
         return ModelResponse.builder()
-                .models(
-                        modelRepository.findModelsWithAccountName(
-                                session.getAccountId()
-                        )
-                )
+                .models(modelRepository.findModelsWithAccountName(accountId))
                 .build();
     }
 
-    public int deleteModel(UUID sessionToken, UUID modelId) {
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        sessionToken, Instant.now())
-                .orElseThrow(InvalidSessionToken::new);
-
+    public int deleteModel(UUID accountId, UUID modelId) {
         return modelRepository.deleteByIdAndAccountId(
                 modelId,
-                session.getAccountId()
+                accountId
         );
     }
 }
