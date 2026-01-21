@@ -25,15 +25,10 @@ public class SessionController {
     public ResponseEntity<SessionResponse> loginAccount(
             @CookieValue(name = "SESSION", required = false) UUID sessionToken,
             @RequestBody @Valid SessionRequest request,
-            HttpServletResponse response
-    ) {
-        LoginSession session = null;
+            HttpServletResponse response) {
+        LoginSession session;
 
-        if (sessionToken != null) {
-            session = sessionService.findValidSession(sessionToken);
-        }
-
-        if (session == null) {
+        if (sessionToken == null) {
             session = sessionService.createSession(request);
 
             ResponseCookie cookie = ResponseCookie.from("SESSION", session.getSessionToken().toString())
@@ -45,6 +40,8 @@ public class SessionController {
                     .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        } else {
+            session = sessionService.findValidSession(sessionToken);
         }
 
         return ResponseEntity.ok(
@@ -52,6 +49,30 @@ public class SessionController {
                         .expirationDate(session.getExpirationDate())
                         .build()
         );
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logoutAccount(
+            @CookieValue(name = "SESSION", required = false) UUID sessionToken,
+            HttpServletResponse response) {
+
+        if (sessionToken != null) {
+            LoginSession session = sessionService.findValidSession(sessionToken);
+            if (session != null) {
+                sessionService.invalidateSession(sessionToken);
+            }
+
+            ResponseCookie cookie = ResponseCookie.from("SESSION", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(0)
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/get-account-by-session")

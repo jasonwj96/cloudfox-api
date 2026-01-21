@@ -81,4 +81,9 @@ public class SessionService {
         SessionResponse response = new SessionResponse();
         return response;
     }
+
+    @Transactional
+    public void invalidateSession(UUID sessionToken) {
+        sessionRepository.deactivateByToken(sessionToken);
+    }
 }

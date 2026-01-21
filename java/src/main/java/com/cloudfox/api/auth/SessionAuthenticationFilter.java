@@ -6,19 +6,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
     private final SessionService sessionService;
-
-    public SessionAuthenticationFilter(SessionService sessionService) {
-        this.sessionService = sessionService;
-    }
 
     @Override
     protected void doFilterInternal(

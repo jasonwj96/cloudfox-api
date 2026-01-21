@@ -30,7 +30,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST,
                                 "/cloudfox-api/v1/accounts/register",
-                                "/cloudfox-api/v1/session/login")
+                                "/cloudfox-api/v1/session/login",
+                                "/cloudfox-api/v1/session/logout")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/cloudfox-api/v1/session/get-account-by-session")
