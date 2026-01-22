@@ -3,14 +3,21 @@ spring:
     name: api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/cloudfox
-    username: postgres
-    password: 3088
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
+
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: https://your-idp-domain/realms/your-realm
+
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}

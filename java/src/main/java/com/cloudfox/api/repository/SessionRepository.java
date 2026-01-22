@@ -23,11 +23,10 @@ public interface SessionRepository extends JpaRepository<LoginSession, UUID> {
 
     @Modifying
     @Query("""
-                UPDATE LoginSession s
-                SET s.isActive = false
-                WHERE s.sessionToken = :token
+            DELETE FROM LoginSession s
+            WHERE s.sessionToken = :token
             """)
-    void deactivateByToken(UUID token);
+    int deleteSessionById(UUID token);
 
     @Modifying
     @Query("""

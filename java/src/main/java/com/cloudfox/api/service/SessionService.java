@@ -84,6 +84,6 @@ public class SessionService {
 
     @Transactional
     public void invalidateSession(UUID sessionToken) {
-        sessionRepository.deactivateByToken(sessionToken);
+        sessionRepository.deleteSessionById(sessionToken);
     }
 }

@@ -98,6 +98,7 @@ public class ModelService {
                 .build();
     }
 
+    @Transactional
     public int deleteModel(UUID accountId, UUID modelId) {
         return modelRepository.deleteByIdAndAccountId(
                 modelId,
