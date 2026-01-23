@@ -33,9 +33,9 @@ public class SessionController {
 
             ResponseCookie cookie = ResponseCookie.from("SESSION", session.getSessionToken().toString())
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .path("/")
-                    .sameSite("None")
+                    .sameSite("Lax")
                     .maxAge(30 * 24 * 60 * 60)
                     .build();
 

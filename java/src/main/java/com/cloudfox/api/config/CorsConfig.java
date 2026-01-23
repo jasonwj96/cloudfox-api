@@ -21,9 +21,8 @@ public class CorsConfig {
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
-        config.setAllowedHeaders(List.of(
-                "Content-Type", "Authorization"
-        ));
+
+        config.addAllowedHeader("*");
 
         config.setAllowCredentials(true);
 
