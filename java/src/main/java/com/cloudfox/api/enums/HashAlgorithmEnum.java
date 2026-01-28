@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public enum HashAlgorithm {
+public enum HashAlgorithmEnum {
     BCRYPT("bcrypt"),
     ARGON2("argon2");
 

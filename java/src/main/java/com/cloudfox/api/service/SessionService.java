@@ -2,15 +2,13 @@ package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.SessionRequest;
 import com.cloudfox.api.dto.response.SessionResponse;
-import com.cloudfox.api.enums.HashAlgorithm;
+import com.cloudfox.api.enums.HashAlgorithmEnum;
 import com.cloudfox.api.exceptions.AuthenticationException;
-import com.cloudfox.api.exceptions.InvalidSessionToken;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.SessionRepository;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +28,7 @@ public class SessionService {
         Account account = accountRepository.findByUsername(request.getUsername())
                 .orElseThrow(AuthenticationException::new);
 
-        HashAlgorithm algorithm = HashAlgorithm.valueOf(
+        HashAlgorithmEnum algorithm = HashAlgorithmEnum.valueOf(
                 account.getPasswordHashAlgo().toUpperCase()
         );
 

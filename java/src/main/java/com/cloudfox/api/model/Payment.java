@@ -1,5 +1,6 @@
 package com.cloudfox.api.model;
 
+import com.cloudfox.api.enums.PaymentStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,12 +29,13 @@ public class Payment {
     @Column(name = "amount_lowest_unit", nullable = false)
     private long amountLowestUnit;
 
-    @Column(name = "currency", nullable = false, length = 3)
-    private String currency;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "currency", nullable = false)
+    private Currency currency;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private PaymentStatus status;
+    private PaymentStatusEnum status;
 
     @Column(name = "creation_date", nullable = false, updatable = false)
     private Instant creationDate;

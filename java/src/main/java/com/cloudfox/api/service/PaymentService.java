@@ -2,11 +2,11 @@ package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.PaymentRequest;
 import com.cloudfox.api.dto.response.PaymentResponse;
-import com.cloudfox.api.enums.OperationType;
+import com.cloudfox.api.enums.OperationTypeEnum;
+import com.cloudfox.api.enums.PaymentStatusEnum;
 import com.cloudfox.api.exceptions.IdempotencyReplayException;
 import com.cloudfox.api.model.IdempotentOperation;
 import com.cloudfox.api.model.Payment;
-import com.cloudfox.api.model.PaymentStatus;
 import com.cloudfox.api.repository.IdempotentOperationRepository;
 import com.cloudfox.api.repository.PaymentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,49 +37,49 @@ public class PaymentService {
             UUID accountId,
             PaymentRequest request) {
 
+
         Optional<IdempotentOperation> operation =
                 idempotentRepository.findByIdempotencyKeyAndOperation(
                         request.idempotencyKey(),
-                        OperationType.PAYMENT.getValue()
+                        OperationTypeEnum.PAYMENT.getValue()
                 );
 
         if (operation.isPresent()) {
             return deserialize(operation.get().getResponseBody());
         }
+//
+//        Payment payment = Payment.builder()
+//                .accountId(accountId)
+//                .amountLowestUnit(request.tokenAmount() * 10)
+//                .currency("USD")
+//                .status(PaymentStatusEnum.PENDING)
+//                .stripePaymentIntentId("xxxxxxxxx")
+//                .build();
+//
+//        Payment newPayment = paymentRepository.save(payment);
+//
+//        PaymentResponse response =
+//                new PaymentResponse(newPayment.getPublicId());
+//
+//        storeIdempotentResponse(request.idempotencyKey(), response);
+//
+//        PaymentIntent intent;
+//
+//        try {
+//            intent = PaymentIntent.create(
+//                    PaymentIntentCreateParams.builder()
+//                            .setAmount(amountLowestUnit)
+//                            .setCurrency(currency)
+//                            .putMetadata("account_id", String.valueOf(accountId))
+//                            .build()
+//            );
+//        } catch (StripeException e) {
+//            throw new RuntimeException("Stripe PaymentIntent creation failed", e);
+//        }
 
+     //   return response;
 
-        /*
-        PaymentIntent intent;
-
-        try {
-            intent = PaymentIntent.create(
-                    PaymentIntentCreateParams.builder()
-                            .setAmount(amountLowestUnit)
-                            .setCurrency(currency)
-                            .putMetadata("account_id", String.valueOf(accountId))
-                            .build()
-            );
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe PaymentIntent creation failed", e);
-        }*/
-
-
-        Payment payment = Payment.builder()
-                .accountId(accountId)
-                .amountLowestUnit(request.tokenAmount() * 10)
-                .currency("USD")
-                .status(PaymentStatus.PENDING)
-                .stripePaymentIntentId("xxxxxxxxx")
-                .build();
-
-        Payment newPayment = paymentRepository.save(payment);
-
-        PaymentResponse response =
-                new PaymentResponse(newPayment.getPublicId());
-
-      //  storeIdempotentResponse(request.idempotencyKey(), response);
-
-        return response;
+        return null;
     }
 
     private void storeIdempotentResponse(
@@ -89,7 +89,7 @@ public class PaymentService {
         try {
             IdempotentOperation idp = IdempotentOperation.builder()
                     .idempotencyKey(idempotencyKey)
-                    .operation(OperationType.PAYMENT.getValue())
+                    .operation(OperationTypeEnum.PAYMENT.getValue())
                     .requestHash("na")
                     .responseStatus(200)
                     .responseBody(objectMapper.writeValueAsString(response))
@@ -103,7 +103,7 @@ public class PaymentService {
             IdempotentOperation existing =
                     idempotentRepository
                             .findByIdempotencyKeyAndOperation(
-                                    idempotencyKey, OperationType.PAYMENT.getValue())
+                                    idempotencyKey, OperationTypeEnum.PAYMENT.getValue())
                             .orElseThrow();
 
             throw new IdempotencyReplayException(existing.getResponseBody());

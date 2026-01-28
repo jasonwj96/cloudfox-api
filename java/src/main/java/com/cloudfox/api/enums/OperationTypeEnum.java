@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum OperationType {
+public enum OperationTypeEnum {
     PAYMENT("PAYMENT");
 
     private final String value;

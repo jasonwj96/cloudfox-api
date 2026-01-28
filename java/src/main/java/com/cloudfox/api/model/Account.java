@@ -53,4 +53,8 @@ public class Account {
     @Column(nullable = false)
     private boolean active = false;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "pricing_plan", nullable = false)
+    private PricingPlan pricingPlan;
+
 }

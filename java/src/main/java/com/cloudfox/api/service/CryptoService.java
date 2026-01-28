@@ -1,6 +1,6 @@
 package com.cloudfox.api.service;
 
-import com.cloudfox.api.enums.HashAlgorithm;
+import com.cloudfox.api.enums.HashAlgorithmEnum;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,7 @@ public class CryptoService {
                     password
             );
 
-            return new Argon2HashResult(hash, HashAlgorithm.ARGON2.getValue());
+            return new Argon2HashResult(hash, HashAlgorithmEnum.ARGON2.getValue());
         } finally {
             argon2.wipeArray(password);
         }
