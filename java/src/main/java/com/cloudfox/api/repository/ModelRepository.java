@@ -45,4 +45,20 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
                   AND m.account.id = :accountId
             """)
     int deleteByIdAndAccountId(UUID modelId, UUID accountId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Model m
+        SET m.active = :modelStatus,
+            m.name = :modelName,
+            m.lastModified = CURRENT_TIMESTAMP
+        WHERE m.id = :modelId
+          AND m.account.id = :accountId
+       """)
+    int updateModelStatusAndName(
+            UUID modelId,
+            UUID accountId,
+            String modelName,
+            Boolean modelStatus
+    );
 }

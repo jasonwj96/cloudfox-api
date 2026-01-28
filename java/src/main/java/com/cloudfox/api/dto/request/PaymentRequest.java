@@ -5,13 +5,8 @@ import jakarta.validation.constraints.Positive;
 import org.springframework.web.bind.annotation.CookieValue;
 
 public record PaymentRequest(
+        String idempotencyKey,
 
-        @Positive
-        long amountLowestUnit,
-
-        @NotBlank
-        String currency,
-
-        String idempotencyKey
+        int tokenAmount
 ) {
 }

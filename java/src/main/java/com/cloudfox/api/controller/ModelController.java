@@ -20,6 +20,19 @@ public class ModelController {
 
     private final ModelService modelService;
 
+    @GetMapping("/find-by-account")
+    public ResponseEntity<ModelResponse> findByAccountId(
+            @AuthenticationPrincipal UUID accountId) {
+        return ResponseEntity.ok(
+                modelService.getAccountModels(accountId)
+        );
+    }
+
+    @GetMapping()
+    public ResponseEntity<ModelResponse> findAll() {
+        return ResponseEntity.ok(modelService.getAllModels());
+    }
+
     @PostMapping(
             value = "/create",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -39,12 +52,15 @@ public class ModelController {
         );
     }
 
-    @GetMapping("/find-by-account")
-    public ResponseEntity<ModelResponse> findByAccountId(
-            @AuthenticationPrincipal UUID accountId) {
-        return ResponseEntity.ok(
-                modelService.getAccountModels(accountId)
-        );
+    @PostMapping("/save")
+    public ResponseEntity<ModelResponse> saveModel(
+            @AuthenticationPrincipal UUID accountId,
+            @ModelAttribute @Valid ModelRequest request) {
+        int rowsAffected = modelService.saveModel(accountId, request);
+
+        return rowsAffected > 0
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{modelId}")

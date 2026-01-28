@@ -2,25 +2,23 @@ package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.PaymentRequest;
 import com.cloudfox.api.dto.response.PaymentResponse;
+import com.cloudfox.api.enums.OperationType;
 import com.cloudfox.api.exceptions.IdempotencyReplayException;
-import com.cloudfox.api.model.*;
-import com.cloudfox.api.repository.AccountRepository;
+import com.cloudfox.api.model.IdempotentOperation;
+import com.cloudfox.api.model.Payment;
+import com.cloudfox.api.model.PaymentStatus;
 import com.cloudfox.api.repository.IdempotentOperationRepository;
 import com.cloudfox.api.repository.PaymentRepository;
-import com.cloudfox.api.repository.SessionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,51 +28,27 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private static final String OPERATION_CREATE_PAYMENT = "CREATE_PAYMENT";
 
     private final PaymentRepository paymentRepository;
     private final IdempotentOperationRepository idempotentRepository;
-    private final SessionRepository sessionRepository;
-    private final AccountRepository accountRepository;
     private final ObjectMapper objectMapper;
 
     public PaymentResponse createPaymentIntent(
-            UUID sessionToken,
-            PaymentRequest request
-    ) {
+            UUID accountId,
+            PaymentRequest request) {
 
-        LoginSession session = sessionRepository
-                .findBySessionTokenAndIsActiveTrueAndExpirationDateAfter(
-                        sessionToken, Instant.now())
-                .orElseThrow(() ->
-                        new SessionAuthenticationException("Invalid session"));
-
-        Account account = accountRepository.findById(session.getAccountId())
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Account not found"));
-
-        Optional<IdempotentOperation> existing =
+        Optional<IdempotentOperation> operation =
                 idempotentRepository.findByIdempotencyKeyAndOperation(
                         request.idempotencyKey(),
-                        OPERATION_CREATE_PAYMENT
+                        OperationType.PAYMENT.getValue()
                 );
 
-        if (existing.isPresent()) {
-            return deserialize(existing.get().getResponseBody());
+        if (operation.isPresent()) {
+            return deserialize(operation.get().getResponseBody());
         }
 
-        long amountLowestUnit = request.amountLowestUnit();
 
-        if (amountLowestUnit <= 0) {
-            throw new IllegalArgumentException("Invalid amount.");
-        }
-
-        if (request.idempotencyKey() == null || request.idempotencyKey().isBlank()) {
-            throw new IllegalArgumentException("Missing idempotency key");
-        }
-
-        String currency = request.currency();
-
+        /*
         PaymentIntent intent;
 
         try {
@@ -82,27 +56,28 @@ public class PaymentService {
                     PaymentIntentCreateParams.builder()
                             .setAmount(amountLowestUnit)
                             .setCurrency(currency)
-                            .putMetadata("account_id", String.valueOf(account.getId()))
+                            .putMetadata("account_id", String.valueOf(accountId))
                             .build()
             );
         } catch (StripeException e) {
             throw new RuntimeException("Stripe PaymentIntent creation failed", e);
-        }
+        }*/
+
 
         Payment payment = Payment.builder()
-                .accountId(account.getId())
-                .amountLowestUnit(amountLowestUnit)
-                .currency(currency)
-                .status(PaymentStatus.pending)
-                .stripePaymentIntentId(intent.getId())
+                .accountId(accountId)
+                .amountLowestUnit(request.tokenAmount() * 10)
+                .currency("USD")
+                .status(PaymentStatus.PENDING)
+                .stripePaymentIntentId("xxxxxxxxx")
                 .build();
 
-        paymentRepository.save(payment);
+        Payment newPayment = paymentRepository.save(payment);
 
         PaymentResponse response =
-                new PaymentResponse(intent.getClientSecret());
+                new PaymentResponse(newPayment.getPublicId());
 
-        storeIdempotentResponse(request.idempotencyKey(), response);
+      //  storeIdempotentResponse(request.idempotencyKey(), response);
 
         return response;
     }
@@ -114,7 +89,7 @@ public class PaymentService {
         try {
             IdempotentOperation idp = IdempotentOperation.builder()
                     .idempotencyKey(idempotencyKey)
-                    .operation(OPERATION_CREATE_PAYMENT)
+                    .operation(OperationType.PAYMENT.getValue())
                     .requestHash("na")
                     .responseStatus(200)
                     .responseBody(objectMapper.writeValueAsString(response))
@@ -128,8 +103,7 @@ public class PaymentService {
             IdempotentOperation existing =
                     idempotentRepository
                             .findByIdempotencyKeyAndOperation(
-                                    idempotencyKey, OPERATION_CREATE_PAYMENT
-                            )
+                                    idempotencyKey, OperationType.PAYMENT.getValue())
                             .orElseThrow();
 
             throw new IdempotencyReplayException(existing.getResponseBody());

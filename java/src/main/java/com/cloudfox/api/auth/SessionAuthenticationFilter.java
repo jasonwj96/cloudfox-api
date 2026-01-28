@@ -29,7 +29,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
 
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
-                    if ("SESSION".equals(cookie.getName())) {
+                    if ("__host_cfx_sid".equals(cookie.getName())) {
                         try {
                             UUID accountId = sessionService
                                     .findValidSession(UUID.fromString(cookie.getValue()))

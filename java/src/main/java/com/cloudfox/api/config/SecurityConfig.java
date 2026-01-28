@@ -36,7 +36,8 @@ public class SecurityConfig {
                                 "/cloudfox-api/v1/session/logout")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/cloudfox-api/v1/session/get-account-by-session")
+                                "/cloudfox-api/v1/session/get-account-by-session",
+                                "/cloudfox-api/v1/model/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated()

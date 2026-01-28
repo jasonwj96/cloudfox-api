@@ -11,6 +11,7 @@ import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.ModelRepository;
 import com.cloudfox.api.repository.SessionRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
@@ -98,11 +99,41 @@ public class ModelService {
                 .build();
     }
 
+    public ModelResponse getAllModels() {
+        List<ModelDTO> models = modelRepository.findAll().stream().map(model ->
+                ModelDTO.builder()
+                        .id(model.getId())
+                        .accountName(model.getAccount().getUsername())
+                        .name(model.getName())
+                        .generatedTokens(model.getGeneratedTokens())
+                        .creationDate(model.getCreationDate())
+                        .fileName(model.getFileName())
+                        .framework(model.getFramework())
+                        .active(model.isActive())
+                        .lastModified(model.getLastModified())
+                        .build()
+        ).toList();
+
+        return ModelResponse.builder()
+                .models(models)
+                .build();
+    }
+
     @Transactional
     public int deleteModel(UUID accountId, UUID modelId) {
         return modelRepository.deleteByIdAndAccountId(
                 modelId,
                 accountId
+        );
+    }
+
+    @Transactional
+    public int saveModel(UUID accountId, @Valid ModelRequest request) {
+        return modelRepository.updateModelStatusAndName(
+                request.getModelId(),
+                accountId,
+                request.getModelName(),
+                request.getModelStatus()
         );
     }
 }

@@ -4,6 +4,7 @@ import com.cloudfox.api.dto.request.PaymentRequest;
 import com.cloudfox.api.dto.response.PaymentResponse;
 import com.cloudfox.api.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -17,8 +18,9 @@ public class PaymentController {
 
     @PostMapping("/intent")
     public PaymentResponse createIntent(
-            @RequestBody PaymentRequest request,
-            @CookieValue("SESSION") UUID sessionToken) {
-        return paymentService.createPaymentIntent(sessionToken, request);
+            @AuthenticationPrincipal UUID accountId,
+            @RequestBody PaymentRequest request) {
+
+        return paymentService.createPaymentIntent(accountId, request);
     }
 }

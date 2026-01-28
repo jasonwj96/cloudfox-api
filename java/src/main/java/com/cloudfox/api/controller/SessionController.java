@@ -23,7 +23,7 @@ public class SessionController {
 
     @PostMapping("/login")
     public ResponseEntity<SessionResponse> loginAccount(
-            @CookieValue(name = "SESSION", required = false) UUID sessionToken,
+            @CookieValue(name = "__host_cfx_sid", required = false) UUID sessionToken,
             @RequestBody @Valid SessionRequest request,
             HttpServletResponse response) {
         LoginSession session;
@@ -31,7 +31,7 @@ public class SessionController {
         if (sessionToken == null) {
             session = sessionService.createSession(request);
 
-            ResponseCookie cookie = ResponseCookie.from("SESSION", session.getSessionToken().toString())
+            ResponseCookie cookie = ResponseCookie.from("__host_cfx_sid", session.getSessionToken().toString())
                     .httpOnly(true)
                     .secure(false)
                     .path("/")
@@ -53,16 +53,17 @@ public class SessionController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logoutAccount(
-            @CookieValue(name = "SESSION", required = false) UUID sessionToken,
+            @CookieValue(name = "__host_cfx_sid", required = false) UUID sessionToken,
             HttpServletResponse response) {
 
         if (sessionToken != null) {
             LoginSession session = sessionService.findValidSession(sessionToken);
+
             if (session != null) {
                 sessionService.invalidateSession(sessionToken);
             }
 
-            ResponseCookie cookie = ResponseCookie.from("SESSION", "")
+            ResponseCookie cookie = ResponseCookie.from("__host_cfx_sid", "")
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
@@ -77,7 +78,7 @@ public class SessionController {
 
     @GetMapping("/get-account-by-session")
     public ResponseEntity<SessionResponse> refreshSession(
-            @CookieValue("SESSION") UUID sessionToken) {
+            @CookieValue("__host_cfx_sid") UUID sessionToken) {
         SessionResponse response = sessionService.getAccountBySession(sessionToken);
         return ResponseEntity.ok(response);
     }
