@@ -16,6 +16,8 @@ spring:
 
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}
+  webhook:
+    secret: ${STRIPE_WH_SECRET}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}

@@ -37,11 +37,17 @@ public class Payment {
     @Column(name = "status", nullable = false)
     private PaymentStatusEnum status;
 
+    @Column(name = "provider")
+    private String provider;
+
     @Column(name = "creation_date", nullable = false, updatable = false)
     private Instant creationDate;
 
-    @Column(name = "stripe_payment_intent_id", unique = true)
-    private String stripePaymentIntentId;
+    @Column(name = "idempotent_key_id", unique = true)
+    private String idempotentKeyId;
+
+    @Column(name = "provider_payment_id", nullable = false, unique = true)
+    private String providerPaymentId;
 
     @PrePersist
     void onCreate() {

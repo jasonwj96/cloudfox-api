@@ -20,10 +20,10 @@ public class Account {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(length = 32, nullable = false, unique = true)
+    @Column(name = "username", length = 32, nullable = false, unique = true)
     private String username;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "fullname", length = 50, nullable = false)
     private String fullname;
 
     @Column(name = "password_hash", nullable = false, unique = true)
@@ -35,7 +35,7 @@ public class Account {
     @Column(name = "password_hash_algo", nullable = false)
     private String passwordHashAlgo;
 
-    @Column(length = 50, unique = true)
+    @Column(name="email", length = 50, unique = true)
     private String email;
 
     @Column(name = "mfa_enabled")
@@ -50,8 +50,11 @@ public class Account {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(nullable = false)
+    @Column(name = "active", nullable = false)
     private boolean active = false;
+
+    @Column(name = "token_balance")
+    private long tokenBalance;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "pricing_plan", nullable = false)
