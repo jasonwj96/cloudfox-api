@@ -15,7 +15,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
+import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.StripeObject;
 import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
@@ -130,6 +132,35 @@ public class PaymentService {
         }
     }
 
+    private void handlePaymentIntent(Event event, PaymentStatusEnum status) {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        if (deserializer.getObject().isEmpty()) {
+            throw new IllegalStateException("Stripe event data object is empty");
+        }
+
+        StripeObject stripeObject = deserializer.getObject().get();
+
+        if (!(stripeObject instanceof PaymentIntent intent)) {
+            return;
+        }
+
+        Payment payment = paymentRepository
+                .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
+                .orElseThrow();
+
+        if (payment.getStatus() == status) {
+            return;
+        }
+
+        payment.setStatus(status);
+        paymentRepository.save(payment);
+
+        if (status == PaymentStatusEnum.SUCCEEDED) {
+            creditTokens(payment);
+        }
+    }
+
     public void handleStripeWebhook(String payload, String signature) {
         Event event;
 
@@ -140,9 +171,10 @@ public class PaymentService {
         }
 
         switch (event.getType()) {
-            case "payment_intent.succeeded" -> handleSucceeded(event);
-            case "payment_intent.payment_failed" -> handleFailed(event);
+            case "payment_intent.succeeded" -> handlePaymentIntent(event, PaymentStatusEnum.SUCCEEDED);
+            case "payment_intent.payment_failed" -> handlePaymentIntent(event, PaymentStatusEnum.FAILED);
             default -> {
+                return;
             }
         }
     }

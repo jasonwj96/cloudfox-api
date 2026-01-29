@@ -2,6 +2,7 @@ package com.cloudfox.api.config;
 
 import com.cloudfox.api.auth.SessionAuthenticationFilter;
 import com.cloudfox.api.service.SessionService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,4 +47,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
 }
