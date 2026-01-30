@@ -12,6 +12,7 @@ import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.IdempotentOperationRepository;
 import com.cloudfox.api.repository.PaymentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
@@ -33,6 +34,8 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.stripe.model.PaymentIntent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -67,12 +70,12 @@ public class PaymentService {
         PricingPlan plan = account.getPricingPlan();
 
         long amountInCents =
-                Math.multiplyExact(request.tokenAmount(), plan.getPriceMicros()) / 10_000;
+                Math.multiplyExact(request.tokenAmount(), plan.getPriceMicros());
 
         PaymentIntent intent;
 
         try {
-            intent = PaymentIntent.create(
+            intent = create(
                     PaymentIntentCreateParams.builder()
                             .setAmount(amountInCents)
                             .setCurrency(plan.getCurrency().getCode())
@@ -153,15 +156,7 @@ public class PaymentService {
     private void handleSucceeded(Event event) {
         PaymentIntent intent = extractIntent(event);
 
-        if (intent == null) {
-            log.error(
-                    "Stripe webhook deserialization failed. Event={}, Type={}",
-                    event.getId(),
-                    event.getType()
-            );
 
-            return;
-        }
 
         Payment payment = paymentRepository
                 .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
@@ -177,22 +172,6 @@ public class PaymentService {
         creditTokens(payment);
     }
 
-    private PaymentIntent extractIntent(Event event) {
-        EventDataObjectDeserializer deserializer =
-                event.getDataObjectDeserializer();
-
-        if (deserializer.getObject().isPresent()) {
-            return (PaymentIntent) deserializer.getObject().get();
-        }
-
-        try {
-            String rawJson = deserializer.getRawJson();
-            return objectMapper.readValue(rawJson, PaymentIntent.class);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     private void handleFailed(Event event) {
         PaymentIntent intent = extractIntent(event);
 
@@ -203,6 +182,28 @@ public class PaymentService {
                     paymentRepository.save(payment);
                 });
     }
+
+    private PaymentIntent extractIntent(Event event) {
+        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
+
+        if (deserializer.getObject().isPresent()) {
+            return (PaymentIntent) deserializer.getObject().get();
+        }
+
+        try {
+            JsonNode root = objectMapper.readTree(deserializer.getRawJson());
+
+            JsonNode target =
+                    root.has("object") && root.get("object").isObject()
+                            ? root.get("object")
+                            : root;
+            return GSON.fromJson(target.toString(), PaymentIntent.class);
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 
     private void creditTokens(Payment payment) {
         Account account = accountRepository
