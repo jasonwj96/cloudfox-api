@@ -1,14 +1,49 @@
 services:
+  cloudfox-ui:
+    build:
+      context: ./cloudfox-ui
+    image: cloudfox-ui
+    container_name: cloudfox-ui
+    ports:
+      - "3000:3000"
+    depends_on:
+      - cloudfox-api
+    environment:
+      NEXT_PUBLIC_API_URL: http://cloudfox-api
+      NEXT_PUBLIC_API_PORT: 8080
+
+  cloudfox-api:
+    build:
+      context: ./cloudfox-api/java
+    image: cloudfox-api
+    container_name: cloudfox-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - localstack
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WH_SECRET: ${STRIPE_WH_SECRET}
+
   postgres:
     image: postgres:17
     container_name: postgres-db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
