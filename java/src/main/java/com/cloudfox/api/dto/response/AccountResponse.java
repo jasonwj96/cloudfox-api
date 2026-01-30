@@ -11,4 +11,7 @@ public class AccountResponse {
     private String username;
     private String fullname;
     private String email;
+    private long tokenBalance;
+    private long pricingPlanMicros;
+    private String pricingPlanCurrency;
 }

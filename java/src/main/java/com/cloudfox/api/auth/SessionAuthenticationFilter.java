@@ -24,24 +24,21 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-
             Cookie[] cookies = request.getCookies();
 
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if ("__host_cfx_sid".equals(cookie.getName())) {
-                        try {
-                            UUID accountId = sessionService
-                                    .findValidSession(UUID.fromString(cookie.getValue()))
-                                    .getAccountId();
 
-                            if (accountId != null) {
-                                SecurityContextHolder.getContext()
-                                        .setAuthentication(new SessionAuthentication(accountId));
-                            }
-                        } catch (IllegalArgumentException ignored) {
+                        UUID accountId = sessionService
+                                .findValidSession(UUID.fromString(cookie.getValue()))
+                                .getAccountId();
 
+                        if (accountId != null) {
+                            SecurityContextHolder.getContext()
+                                    .setAuthentication(new SessionAuthentication(accountId));
                         }
+
                         break;
                     }
                 }
@@ -49,11 +46,5 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getRequestURI()
-                .startsWith("/cloudfox-api/v1/payment/stripe/webhook");
     }
 }

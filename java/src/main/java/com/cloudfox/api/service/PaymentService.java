@@ -18,11 +18,14 @@ import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.StripeObject;
+import com.stripe.net.ApiResource;
 import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,10 +35,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
     private final PaymentRepository paymentRepository;
     private final AccountRepository accountRepository;
     private final IdempotentOperationRepository idempotentRepository;
@@ -44,6 +47,7 @@ public class PaymentService {
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
+    @Transactional
     public PaymentResponse createPaymentIntent(
             UUID accountId,
             PaymentRequest request) {
@@ -62,35 +66,33 @@ public class PaymentService {
 
         PricingPlan plan = account.getPricingPlan();
 
-        long amountLowestUnit = Math.multiplyExact(
-                request.tokenAmount(),
-                plan.getPriceMicros());
+        long amountInCents =
+                Math.multiplyExact(request.tokenAmount(), plan.getPriceMicros()) / 10_000;
 
         PaymentIntent intent;
 
         try {
             intent = PaymentIntent.create(
                     PaymentIntentCreateParams.builder()
-                            .setAmount(Math.floorDiv(amountLowestUnit, 10_000))
+                            .setAmount(amountInCents)
                             .setCurrency(plan.getCurrency().getCode())
                             .putMetadata("account_id", accountId.toString())
                             .build(),
                     RequestOptions.builder()
                             .setIdempotencyKey(request.idempotencyKey())
-                            .build()
-
-            );
+                            .build());
         } catch (StripeException e) {
             throw new RuntimeException("Stripe PaymentIntent creation failed", e);
         }
 
         Payment payment = Payment.builder()
                 .accountId(accountId)
-                .amountLowestUnit(amountLowestUnit)
-                .currency(plan.getCurrency())
                 .provider("STRIPE")
                 .providerPaymentId(intent.getId())
+                .currency(plan.getCurrency())
+                .amountLowestUnit(amountInCents)
                 .idempotentKeyId(request.idempotencyKey())
+                .tokenAmount(request.tokenAmount())
                 .status(PaymentStatusEnum.PENDING)
                 .build();
 
@@ -132,65 +134,40 @@ public class PaymentService {
         }
     }
 
-    private void handlePaymentIntent(Event event, PaymentStatusEnum status) {
-        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
-
-        if (deserializer.getObject().isEmpty()) {
-            throw new IllegalStateException("Stripe event data object is empty");
-        }
-
-        StripeObject stripeObject = deserializer.getObject().get();
-
-        if (!(stripeObject instanceof PaymentIntent intent)) {
-            return;
-        }
-
-        Payment payment = paymentRepository
-                .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
-                .orElseThrow();
-
-        if (payment.getStatus() == status) {
-            return;
-        }
-
-        payment.setStatus(status);
-        paymentRepository.save(payment);
-
-        if (status == PaymentStatusEnum.SUCCEEDED) {
-            creditTokens(payment);
-        }
-    }
-
     public void handleStripeWebhook(String payload, String signature) {
         Event event;
 
         try {
             event = Webhook.constructEvent(payload, signature, webhookSecret);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid Stripe webhook signature", e);
+            log.error(e.getMessage());
+            return;
         }
 
         switch (event.getType()) {
-            case "payment_intent.succeeded" -> handlePaymentIntent(event, PaymentStatusEnum.SUCCEEDED);
-            case "payment_intent.payment_failed" -> handlePaymentIntent(event, PaymentStatusEnum.FAILED);
-            default -> {
-                return;
-            }
+            case "payment_intent.succeeded" -> handleSucceeded(event);
+            case "payment_intent.payment_failed" -> handleFailed(event);
         }
     }
 
     private void handleSucceeded(Event event) {
         PaymentIntent intent = extractIntent(event);
 
+        if (intent == null) {
+            log.error(
+                    "Stripe webhook deserialization failed. Event={}, Type={}",
+                    event.getId(),
+                    event.getType()
+            );
+
+            return;
+        }
+
         Payment payment = paymentRepository
                 .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "Payment not found for Stripe intent " + intent.getId()
-                        )
-                );
+                .orElse(null);
 
-        if (payment.getStatus() == PaymentStatusEnum.SUCCEEDED) {
+        if (payment == null || payment.getStatus() == PaymentStatusEnum.SUCCEEDED) {
             return;
         }
 
@@ -201,19 +178,26 @@ public class PaymentService {
     }
 
     private PaymentIntent extractIntent(Event event) {
-        return (PaymentIntent) event
-                .getDataObjectDeserializer()
-                .getObject()
-                .orElseThrow(() ->
-                        new IllegalStateException("Unable to deserialize Stripe event object")
-                );
+        EventDataObjectDeserializer deserializer =
+                event.getDataObjectDeserializer();
+
+        if (deserializer.getObject().isPresent()) {
+            return (PaymentIntent) deserializer.getObject().get();
+        }
+
+        try {
+            String rawJson = deserializer.getRawJson();
+            return objectMapper.readValue(rawJson, PaymentIntent.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void handleFailed(Event event) {
         PaymentIntent intent = extractIntent(event);
 
         paymentRepository
-                .findByIdempotentKeyId(intent.getId())
+                .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
                 .ifPresent(payment -> {
                     payment.setStatus(PaymentStatusEnum.FAILED);
                     paymentRepository.save(payment);
@@ -223,23 +207,15 @@ public class PaymentService {
     private void creditTokens(Payment payment) {
         Account account = accountRepository
                 .findById(payment.getAccountId())
-                .orElseThrow();
+                .orElse(null);
 
-        long tokens = calculateTokens(payment);
+        if (account == null) {
+            return;
+        }
 
-        account.setTokenBalance(account.getTokenBalance() + tokens);
+        account.setTokenBalance(
+                account.getTokenBalance() + payment.getTokenAmount());
+
         accountRepository.save(account);
     }
-
-    private long calculateTokens(Payment payment) {
-
-        Account account = accountRepository
-                .findById(payment.getAccountId())
-                .orElseThrow();
-
-        PricingPlan plan = account.getPricingPlan();
-
-        return payment.getAmountLowestUnit() / plan.getPriceMicros();
-    }
-
 }

@@ -3,6 +3,7 @@ package com.cloudfox.api.model;
 import com.cloudfox.api.enums.PaymentStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -40,6 +41,7 @@ public class Payment {
     @Column(name = "provider")
     private String provider;
 
+    @CreationTimestamp
     @Column(name = "creation_date", nullable = false, updatable = false)
     private Instant creationDate;
 
@@ -49,9 +51,11 @@ public class Payment {
     @Column(name = "provider_payment_id", nullable = false, unique = true)
     private String providerPaymentId;
 
+    @Column(name = "token_amount", nullable = false)
+    private long tokenAmount;
+
     @PrePersist
     void onCreate() {
         this.publicId = UUID.randomUUID();
-        this.creationDate = Instant.now();
     }
 }

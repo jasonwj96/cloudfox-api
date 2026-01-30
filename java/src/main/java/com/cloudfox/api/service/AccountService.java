@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +52,21 @@ public class AccountService {
                 .build();
     }
 
-    public Optional<Account> getAccountByUsername(String username) {
-        return accountRepository.findByUsername(username);
+    public AccountResponse getAccountById(UUID accountId) {
+        AccountResponse response = new AccountResponse();
+        Optional<Account> account = accountRepository.findById(accountId);
+
+        if (account.isPresent()) {
+            response = AccountResponse.builder()
+                    .username(account.get().getUsername())
+                    .email(account.get().getEmail())
+                    .fullname(account.get().getFullname())
+                    .tokenBalance(account.get().getTokenBalance())
+                    .pricingPlanMicros(account.get().getPricingPlan().getPriceMicros())
+                    .pricingPlanCurrency(account.get().getPricingPlan().getCurrency().getCode())
+                    .build();
+        }
+
+        return response;
     }
 }
