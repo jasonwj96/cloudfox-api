@@ -1,20 +1,7 @@
 services:
-  cloudfox-ui:
-    build:
-      context: ./cloudfox-ui
-    image: cloudfox-ui
-    container_name: cloudfox-ui
-    ports:
-      - "3000:3000"
-    depends_on:
-      - cloudfox-api
-    environment:
-      NEXT_PUBLIC_API_URL: http://cloudfox-api
-      NEXT_PUBLIC_API_PORT: 8080
-
   cloudfox-api:
     build:
-      context: ./cloudfox-api/java
+      context: .
     image: cloudfox-api
     container_name: cloudfox-api
     ports:
@@ -27,6 +14,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       CORS_ALLOWED_ORIGINS: http://localhost:3000
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

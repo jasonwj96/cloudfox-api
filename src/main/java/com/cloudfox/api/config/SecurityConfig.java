@@ -31,9 +31,11 @@ public class SecurityConfig {
                         new SessionAuthenticationFilter(sessionService),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/cloudfox-api/v1/accounts/register",
-                                "/cloudfox-api/v1/session/login",
+                                "/cloudfox-api/v1/session/logsin",
                                 "/cloudfox-api/v1/session/logout",
                                 "/cloudfox-api/v1/payment/stripe/webhook")
                         .permitAll()
@@ -47,6 +49,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-
-
 }
