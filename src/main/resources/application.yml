@@ -23,6 +23,9 @@ spring:
 
 server:
   port: 8080
+  servlet:
+    context-path: /cloudfox-api/v1
+  forward-headers-strategy: native
 
 stripe:
   secret-key: ${STRIPE_SECRET_KEY}

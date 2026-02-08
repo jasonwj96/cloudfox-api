@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/cloudfox-api/v1/payment")
+@RequestMapping("/payment")
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentController {

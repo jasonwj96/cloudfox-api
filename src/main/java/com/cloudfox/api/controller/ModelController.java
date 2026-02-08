@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/cloudfox-api/v1/model")
+@RequestMapping("/model")
 @RequiredArgsConstructor
 public class ModelController {
 

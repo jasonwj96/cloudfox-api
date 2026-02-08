@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/cloudfox-api/v1/accounts")
+@RequestMapping("/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 

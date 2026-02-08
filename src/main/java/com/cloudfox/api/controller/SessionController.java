@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/cloudfox-api/v1/session")
+@RequestMapping("/session")
 @RequiredArgsConstructor
 public class SessionController {
 
