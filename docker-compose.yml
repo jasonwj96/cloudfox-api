@@ -36,6 +36,14 @@ services:
     container_name: cloudfox-ui
     restart: unless-stopped
 
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: http://cloudfox-api:8080
+
+    depends_on:
+      cloudfox-api:
+        condition: service_healthy
+
   postgres:
     image: postgres:17
     container_name: postgres-db
