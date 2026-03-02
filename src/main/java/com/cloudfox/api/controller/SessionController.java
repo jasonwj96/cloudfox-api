@@ -65,9 +65,9 @@ public class SessionController {
 
             ResponseCookie cookie = ResponseCookie.from("__host_cfx_sid", "")
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .path("/")
-                    .sameSite("None")
+                    .sameSite("Lax")
                     .maxAge(0)
                     .build();
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

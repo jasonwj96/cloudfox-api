@@ -12,7 +12,6 @@ import java.util.UUID;
 @Builder
 public class ModelRequest {
     private UUID modelId;
-    private String accountId;
     private String modelName;
     private String framework;
     private MultipartFile filePayload;
