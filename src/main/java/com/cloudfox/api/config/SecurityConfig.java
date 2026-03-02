@@ -22,12 +22,15 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) {
 
+        CookieCsrfTokenRepository cookieRepo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        cookieRepo.setCookiePath("/");
+
         http
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(cookieRepo)
                         .ignoringRequestMatchers(
-                                "/payment/stripe/webhook"   // external service
+                                "/payment/stripe/webhook"
                         )
                 )
                 .sessionManagement(session ->
@@ -35,13 +38,14 @@ public class SecurityConfig {
                 .addFilterBefore(new SessionAuthenticationFilter(sessionService),
                         UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/auth/csrf")
+                        .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/accounts/register",
                                 "/session/login",
-                                "/session/logout",
-                                "/payment/stripe/webhook")
+                                "/session/logout")
                         .permitAll()
                         .anyRequest()
                         .authenticated()

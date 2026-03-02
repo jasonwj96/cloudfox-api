@@ -1,12 +1,12 @@
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '4.0.1'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id "java"
+    id "org.springframework.boot" version "4.0.1"
+    id "io.spring.dependency-management" version "1.1.7"
 }
 
-group = 'com.cloudfox'
-version = '0.0.1-SNAPSHOT'
-description = 'API for the cloudfox ui'
+group = "com.cloudfox"
+version = "0.0.1-SNAPSHOT"
+description = "API for the cloudfox ui"
 
 java {
     toolchain {
@@ -25,31 +25,32 @@ repositories {
 }
 
 ext {
-    set('springCloudVersion', "2025.1.0")
+    set("springCloudVersion", "2025.1.0")
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-kafka'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.cloud:spring-cloud-config-server'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'de.mkammerer:argon2-jvm:2.11'
-    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-kafka"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.cloud:spring-cloud-config-server"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "de.mkammerer:argon2-jvm:2.11"
+    implementation "com.google.code.gson:gson:2.10.1"
     implementation platform("software.amazon.awssdk:bom:2.25.67")
-    implementation 'software.amazon.awssdk:s3'
-    implementation 'com.stripe:stripe-java:25.6.0'
+    implementation "software.amazon.awssdk:s3"
+    implementation "com.stripe:stripe-java:25.6.0"
     implementation "org.springframework.boot:spring-boot-starter-oauth2-resource-server"
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-kafka-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.apache.kafka:kafka_2.10:0.10.2.2"
+    compileOnly "org.projectlombok:lombok"
+    developmentOnly "org.springframework.boot:spring-boot-devtools"
+    runtimeOnly "org.postgresql:postgresql"
+    annotationProcessor "org.projectlombok:lombok"
+    testImplementation "org.springframework.boot:spring-boot-starter-kafka-test"
+    testImplementation "org.springframework.boot:spring-boot-starter-security-test"
+    testImplementation "org.springframework.boot:spring-boot-starter-webmvc-test"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 dependencyManagement {
@@ -58,10 +59,10 @@ dependencyManagement {
     }
 }
 
-tasks.named('test') {
+tasks.named("test") {
     useJUnitPlatform()
 }
 
-tasks.named('bootJar') {
-    archiveFileName = 'cloudfox-api.jar'
+tasks.named("bootJar") {
+    archiveFileName = "cloudfox-api.jar"
 }

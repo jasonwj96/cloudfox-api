@@ -31,8 +31,6 @@ management:
       enabled: true
     diskspace:
       enabled: false
-    mail:
-      enabled: false
 
 server:
   port: 8080
@@ -50,3 +48,4 @@ logging:
     root: INFO
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql: WARN
+    org.springframework.security: TRACE
