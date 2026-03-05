@@ -32,14 +32,13 @@ public class SecurityConfig {
                         .csrfTokenRepository(cookieRepo)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .ignoringRequestMatchers("/payment/stripe/webhook")
-                )
-                .sessionManagement(session ->
+                )                .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(new SessionAuthenticationFilter(sessionService),
                         AnonymousAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/auth/csrf")
+                        .requestMatchers(HttpMethod.GET, "/security/csrf-token")
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()

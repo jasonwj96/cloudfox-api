@@ -74,7 +74,7 @@ public class ModelService {
 
     public ModelResponse getAccountModel(UUID accountId, UUID modelId) {
 
-        Model model = modelRepository.findModelAccountIdAndModelId(
+        Model model = modelRepository.findByIdAndAccountId(
                 modelId,
                 accountId).orElseThrow(ModelDoesNotExist::new);
 

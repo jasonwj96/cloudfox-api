@@ -49,7 +49,7 @@ public class ModelController {
             @RequestBody ModelRequest request,
             @AuthenticationPrincipal UUID accountId) {
         return ResponseEntity.ok(
-                modelService.getAccountModel(accountId, request)
+                modelService.getAccountModel(accountId, request.getModelId())
         );
     }
 

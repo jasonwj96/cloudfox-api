@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ModelRepository extends JpaRepository<Model, UUID> {
-    Optional<Model> findModelAccountIdAndModelId(UUID id, UUID accountId);
+    Optional<Model> findByIdAndAccountId(UUID id, UUID accountId);
 
     @Query("""
                 select new com.cloudfox.api.dto.response.ModelDTO(
