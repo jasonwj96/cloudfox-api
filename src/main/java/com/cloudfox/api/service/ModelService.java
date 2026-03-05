@@ -4,6 +4,7 @@ import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.dto.response.ModelResponse;
 import com.cloudfox.api.exceptions.InvalidSessionToken;
+import com.cloudfox.api.exceptions.ModelDoesNotExist;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.model.Model;
@@ -71,11 +72,11 @@ public class ModelService {
         return response;
     }
 
-    public ModelResponse getAccountModel(UUID accountId, ModelRequest request) {
+    public ModelResponse getAccountModel(UUID accountId, UUID modelId) {
 
-        Model model = modelRepository.findModelByIdAndAccountId(
-                request.getModelId(),
-                accountId);
+        Model model = modelRepository.findModelAccountIdAndModelId(
+                modelId,
+                accountId).orElseThrow(ModelDoesNotExist::new);
 
         ModelDTO dto = ModelDTO.builder()
                 .id(model.getId())

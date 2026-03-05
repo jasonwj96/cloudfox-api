@@ -19,14 +19,14 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AccountResponse> registerAccount(@RequestBody @Valid AccountRequest request) {
+    @PostMapping
+    public ResponseEntity<AccountResponse> create(@RequestBody @Valid AccountRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(accountService.createAccount(request));
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<AccountResponse> getProfile(
+    @GetMapping("/me")
+    public ResponseEntity<AccountResponse> getCurrent(
             @AuthenticationPrincipal UUID accountId) {
         return ResponseEntity.ok(accountService.getAccountById(accountId));
     }

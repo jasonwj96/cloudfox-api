@@ -7,10 +7,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ModelRepository extends JpaRepository<Model, UUID> {
-    Model findModelByIdAndAccountId(UUID id, UUID accountId);
+    Optional<Model> findModelAccountIdAndModelId(UUID id, UUID accountId);
 
     @Query("""
                 select new com.cloudfox.api.dto.response.ModelDTO(
@@ -48,13 +49,13 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        UPDATE Model m
-        SET m.active = :modelStatus,
-            m.name = :modelName,
-            m.lastModified = CURRENT_TIMESTAMP
-        WHERE m.id = :modelId
-          AND m.account.id = :accountId
-       """)
+             UPDATE Model m
+             SET m.active = :modelStatus,
+                 m.name = :modelName,
+                 m.lastModified = CURRENT_TIMESTAMP
+             WHERE m.id = :modelId
+               AND m.account.id = :accountId
+            """)
     int updateModelStatusAndName(
             UUID modelId,
             UUID accountId,

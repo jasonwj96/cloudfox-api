@@ -14,22 +14,23 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/model")
+@RequestMapping("/models")
 @RequiredArgsConstructor
 public class ModelController {
 
     private final ModelService modelService;
 
-    @GetMapping("/find-by-account")
-    public ResponseEntity<ModelResponse> findByAccountId(
-            @AuthenticationPrincipal UUID accountId) {
+    @GetMapping("/{modelId}")
+    public ResponseEntity<ModelResponse> getById(
+            @AuthenticationPrincipal UUID accountId,
+            @PathVariable UUID modelId) {
         return ResponseEntity.ok(
-                modelService.getAccountModels(accountId)
+                modelService.getAccountModel(accountId, modelId)
         );
     }
 
     @GetMapping()
-    public ResponseEntity<ModelResponse> findAll() {
+    public ResponseEntity<ModelResponse> getAll() {
         return ResponseEntity.ok(modelService.getAllModels());
     }
 

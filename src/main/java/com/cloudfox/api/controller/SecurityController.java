@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/security")
 @RequiredArgsConstructor
-public class AuthController {
+public class SecurityController {
 
-    @GetMapping("csrf")
-    public CsrfToken csrf(CsrfToken token) {
+    @GetMapping("csrf-token")
+    public CsrfToken getCSRFToken(CsrfToken token) {
         return token;
     }
 }
