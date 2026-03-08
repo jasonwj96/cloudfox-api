@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,6 +30,15 @@ public class ModelController {
         );
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ModelResponse> getAllByAccountId(
+            @AuthenticationPrincipal UUID accountId) {
+
+        return ResponseEntity.ok(
+                modelService.getAccountModels(accountId)
+        );
+    }
+
     @GetMapping()
     public ResponseEntity<ModelResponse> getAll() {
         return ResponseEntity.ok(modelService.getAllModels());
@@ -42,11 +52,12 @@ public class ModelController {
                 .body(modelService.createModel(accountId, request));
     }
 
-    @PatchMapping
+    @PatchMapping("/{modelId}")
     public ResponseEntity<ModelResponse> updateModel(
             @AuthenticationPrincipal UUID accountId,
-            @ModelAttribute @Valid ModelRequest request) {
-        int rowsAffected = modelService.saveModel(accountId, request);
+            @RequestBody @Valid ModelRequest request,
+            @PathVariable UUID modelId) {
+        int rowsAffected = modelService.saveModel(accountId, modelId, request);
 
         return rowsAffected > 0
                 ? ResponseEntity.noContent().build()

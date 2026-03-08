@@ -124,12 +124,14 @@ public class ModelService {
     }
 
     @Transactional
-    public int saveModel(UUID accountId, @Valid ModelRequest request) {
+    public int saveModel(UUID accountId, UUID modelId, @Valid ModelRequest request) {
         return modelRepository.updateModelStatusAndName(
-                request.getModelId(),
+                modelId,
                 accountId,
                 request.getModelName(),
                 request.getModelStatus()
         );
     }
+
+
 }

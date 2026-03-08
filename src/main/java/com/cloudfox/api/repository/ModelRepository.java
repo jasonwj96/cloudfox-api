@@ -5,6 +5,7 @@ import com.cloudfox.api.model.Model;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,17 +50,17 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-             UPDATE Model m
-             SET m.active = :modelStatus,
-                 m.name = :modelName,
-                 m.lastModified = CURRENT_TIMESTAMP
-             WHERE m.id = :modelId
-               AND m.account.id = :accountId
+            UPDATE Model m
+            SET m.active = :modelStatus,
+                m.name = :modelName,
+                m.lastModified = CURRENT_TIMESTAMP
+            WHERE m.id = :modelId
+              AND m.account.id = :accountId
             """)
     int updateModelStatusAndName(
-            UUID modelId,
-            UUID accountId,
-            String modelName,
-            Boolean modelStatus
+            @Param("modelId") UUID modelId,
+            @Param("accountId") UUID accountId,
+            @Param("modelName") String modelName,
+            @Param("modelStatus") Boolean modelStatus
     );
 }
