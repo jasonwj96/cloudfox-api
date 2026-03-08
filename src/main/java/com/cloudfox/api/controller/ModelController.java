@@ -25,7 +25,7 @@ public class ModelController {
             @AuthenticationPrincipal UUID accountId,
             @PathVariable UUID modelId) {
         return ResponseEntity.ok(
-                modelService.getAccountModel(accountId, modelId)
+                modelService.getModel(accountId, modelId)
         );
     }
 
@@ -34,9 +34,7 @@ public class ModelController {
         return ResponseEntity.ok(modelService.getAllModels());
     }
 
-    @PostMapping(
-            value = "/create",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ModelResponse> createModel(
             @AuthenticationPrincipal UUID accountId,
             @ModelAttribute @Valid ModelRequest request) {
@@ -44,17 +42,8 @@ public class ModelController {
                 .body(modelService.createModel(accountId, request));
     }
 
-    @PostMapping("/find-by-id")
-    public ResponseEntity<ModelResponse> findById(
-            @RequestBody ModelRequest request,
-            @AuthenticationPrincipal UUID accountId) {
-        return ResponseEntity.ok(
-                modelService.getAccountModel(accountId, request.getModelId())
-        );
-    }
-
-    @PostMapping("/save")
-    public ResponseEntity<ModelResponse> saveModel(
+    @PatchMapping
+    public ResponseEntity<ModelResponse> updateModel(
             @AuthenticationPrincipal UUID accountId,
             @ModelAttribute @Valid ModelRequest request) {
         int rowsAffected = modelService.saveModel(accountId, request);

@@ -3,10 +3,8 @@ package com.cloudfox.api.service;
 import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.dto.response.ModelResponse;
-import com.cloudfox.api.exceptions.InvalidSessionToken;
 import com.cloudfox.api.exceptions.ModelDoesNotExist;
 import com.cloudfox.api.model.Account;
-import com.cloudfox.api.model.LoginSession;
 import com.cloudfox.api.model.Model;
 import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.ModelRepository;
@@ -14,13 +12,10 @@ import com.cloudfox.api.repository.SessionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.web.authentication.session.SessionAuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -72,7 +67,7 @@ public class ModelService {
         return response;
     }
 
-    public ModelResponse getAccountModel(UUID accountId, UUID modelId) {
+    public ModelResponse getModel(UUID accountId, UUID modelId) {
 
         Model model = modelRepository.findByIdAndAccountId(
                 modelId,
