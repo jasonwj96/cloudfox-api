@@ -1,6 +1,7 @@
 package com.cloudfox.api.model;
 
 
+import com.cloudfox.api.enums.ModelStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -42,8 +43,9 @@ public class Model {
     @Column(name = "framework", nullable = false)
     private String framework;
 
-    @Column(name = "active", nullable = false)
-    private boolean active;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ModelStatus status;
 
     @UpdateTimestamp
     @Column(name = "last_modified", nullable = false)

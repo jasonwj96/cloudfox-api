@@ -3,12 +3,14 @@ package com.cloudfox.api.service;
 import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.dto.response.ModelResponse;
+import com.cloudfox.api.enums.ModelStatus;
 import com.cloudfox.api.exceptions.ModelDoesNotExist;
+import com.cloudfox.api.kafka.ModelKafkaProducer;
+import com.cloudfox.api.kafka.ModelUploadEvent;
 import com.cloudfox.api.model.Account;
 import com.cloudfox.api.model.Model;
 import com.cloudfox.api.repository.AccountRepository;
 import com.cloudfox.api.repository.ModelRepository;
-import com.cloudfox.api.repository.SessionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,48 +25,41 @@ import java.util.UUID;
 public class ModelService {
 
     private final ModelRepository modelRepository;
-    private final SessionRepository sessionRepository;
-    private final S3Service s3Service;
     private final AccountRepository accountRepository;
+    private final ModelKafkaProducer modelKafkaProducer;
 
     @Transactional
     public ModelResponse createModel(UUID accountId, ModelRequest request) {
 
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Account not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
         String s3Key = accountId + "/" + request.getFilePayload().getOriginalFilename();
-        s3Service.saveFile(request.getFilePayload(), s3Key);
 
         Model model = Model.builder()
                 .account(account)
                 .name(request.getModelName())
                 .fileName(request.getFilePayload().getOriginalFilename())
                 .framework(request.getFramework())
-                .active(request.getModelStatus())
+                .status(ModelStatus.PENDING)
                 .build();
 
         model = modelRepository.save(model);
+
+        ModelUploadEvent event = ModelUploadEvent.builder()
+                .modelId(model.getId())
+                .accountId(accountId)
+                .tempFilePath(request.getFilePayload().getOriginalFilename())
+                .s3Key(s3Key)
+                .framework(request.getFramework())
+                .build();
+
+        modelKafkaProducer.sendModelUploadEvent(event);
 
         return ModelResponse.builder()
                 .name(model.getName())
                 .fileName(model.getFileName())
                 .build();
-    }
-
-    @Transactional
-    public ModelResponse addGeneratedTokens(ModelRequest modelRequest) {
-        ModelResponse response = new ModelResponse();
-        int gainedTokens = 10;
-
-        int updated = modelRepository.incrementGeneratedTokens(modelRequest.getModelId(), gainedTokens);
-
-        if (updated != 1) {
-            throw new EntityNotFoundException("Model not found: " + modelRequest.getModelId());
-        }
-
-        return response;
     }
 
     public ModelResponse getModel(UUID accountId, UUID modelId) {
@@ -81,7 +76,7 @@ public class ModelService {
                 .creationDate(model.getCreationDate())
                 .fileName(model.getFileName())
                 .framework(model.getFramework())
-                .active(model.isActive())
+                .status(model.getStatus().toString())
                 .build();
 
         return ModelResponse.builder()
@@ -105,7 +100,7 @@ public class ModelService {
                         .creationDate(model.getCreationDate())
                         .fileName(model.getFileName())
                         .framework(model.getFramework())
-                        .active(model.isActive())
+                        .status(model.getStatus().toString())
                         .lastModified(model.getLastModified())
                         .build()
         ).toList();

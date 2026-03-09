@@ -18,6 +18,6 @@ public class ModelDTO {
     private Instant creationDate;
     private String fileName;
     private String framework;
-    private boolean active;
+    private String status;
     private Instant lastModified;
 }
