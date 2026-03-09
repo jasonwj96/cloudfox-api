@@ -5,6 +5,8 @@ import com.cloudfox.api.model.Model;
 import com.cloudfox.api.repository.ModelRepository;
 import com.cloudfox.api.service.S3Service;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,8 @@ public class ModelUploadConsumer {
 
     private final ModelRepository modelRepository;
     private final S3Service s3Service;
+    private static final Logger log =
+            LoggerFactory.getLogger(ModelUploadConsumer.class);
 
     @KafkaListener(topics = "model-upload-topic", groupId = "model-upload-group")
     @Transactional
@@ -44,11 +48,17 @@ public class ModelUploadConsumer {
                         stream
                 );
 
+            } catch (Exception e) {
+                log.error("Model upload failed for {}", event.getModelId(), e);
+                model.setStatus(ModelStatus.FAILED);
             }
+
+            Files.deleteIfExists(path);
 
             model.setStatus(ModelStatus.COMPLETED);
 
         } catch (Exception e) {
+            log.error("Model upload failed for {}", event.getModelId(), e);
             model.setStatus(ModelStatus.FAILED);
         }
 

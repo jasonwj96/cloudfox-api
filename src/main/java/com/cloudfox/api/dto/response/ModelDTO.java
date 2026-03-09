@@ -1,5 +1,6 @@
 package com.cloudfox.api.dto.response;
 
+import com.cloudfox.api.enums.ModelStatus;
 import lombok.*;
 
 import java.time.Instant;
@@ -18,6 +19,6 @@ public class ModelDTO {
     private Instant creationDate;
     private String fileName;
     private String framework;
-    private String status;
+    private ModelStatus status;
     private Instant lastModified;
 }

@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,32 +37,48 @@ public class ModelService {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new EntityNotFoundException("Account not found"));
 
-        String s3Key = accountId + "/" + request.getFilePayload().getOriginalFilename();
+        try {
 
-        Model model = Model.builder()
-                .account(account)
-                .name(request.getModelName())
-                .fileName(request.getFilePayload().getOriginalFilename())
-                .framework(request.getFramework())
-                .status(ModelStatus.PENDING)
-                .build();
+            Path tempFile = Files.createTempFile(
+                    "model-",
+                    request.getFilePayload().getOriginalFilename()
+            );
 
-        model = modelRepository.save(model);
+            request.getFilePayload().transferTo(tempFile);
 
-        ModelUploadEvent event = ModelUploadEvent.builder()
-                .modelId(model.getId())
-                .accountId(accountId)
-                .tempFilePath(request.getFilePayload().getOriginalFilename())
-                .s3Key(s3Key)
-                .framework(request.getFramework())
-                .build();
+            Model model = Model.builder()
+                    .account(account)
+                    .name(request.getModelName())
+                    .fileName(request.getFilePayload().getOriginalFilename())
+                    .framework(request.getFramework())
+                    .status(ModelStatus.PENDING)
+                    .build();
 
-        modelKafkaProducer.sendModelUploadEvent(event);
+            model = modelRepository.save(model);
 
-        return ModelResponse.builder()
-                .name(model.getName())
-                .fileName(model.getFileName())
-                .build();
+            String s3Key =
+                    accountId + "/" +
+                            model.getId() + "/" +
+                            request.getFilePayload().getOriginalFilename();
+
+            ModelUploadEvent event = ModelUploadEvent.builder()
+                    .modelId(model.getId())
+                    .accountId(accountId)
+                    .tempFilePath(tempFile.toString())
+                    .s3Key(s3Key)
+                    .framework(request.getFramework())
+                    .build();
+
+            modelKafkaProducer.sendModelUploadEvent(event);
+
+            return ModelResponse.builder()
+                    .name(model.getName())
+                    .fileName(model.getFileName())
+                    .build();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store uploaded model file", e);
+        }
     }
 
     public ModelResponse getModel(UUID accountId, UUID modelId) {
@@ -76,7 +95,7 @@ public class ModelService {
                 .creationDate(model.getCreationDate())
                 .fileName(model.getFileName())
                 .framework(model.getFramework())
-                .status(model.getStatus().toString())
+                .status(model.getStatus())
                 .build();
 
         return ModelResponse.builder()
@@ -100,7 +119,7 @@ public class ModelService {
                         .creationDate(model.getCreationDate())
                         .fileName(model.getFileName())
                         .framework(model.getFramework())
-                        .status(model.getStatus().toString())
+                        .status(model.getStatus())
                         .lastModified(model.getLastModified())
                         .build()
         ).toList();
