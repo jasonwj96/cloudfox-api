@@ -1,5 +1,6 @@
 package com.cloudfox.api.dto.request;
 
+import com.cloudfox.api.enums.ModelStatus;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,5 +16,5 @@ public class ModelRequest {
     private String modelName;
     private String framework;
     private MultipartFile filePayload;
-    private Boolean modelStatus;
+    private ModelStatus modelStatus;
 }

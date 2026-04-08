@@ -1,6 +1,7 @@
 package com.cloudfox.api.repository;
 
 import com.cloudfox.api.dto.response.ModelDTO;
+import com.cloudfox.api.enums.ModelStatus;
 import com.cloudfox.api.model.Model;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,22 +24,13 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
                     m.creationDate,
                     m.fileName,
                     m.framework,
-                    m.active,
+                    m.status,
                     m.lastModified
                 )
                 from Model m
                 where m.account.id = :accountId
             """)
     List<ModelDTO> findModelsWithAccountName(UUID accountId);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-                UPDATE Model m
-                SET m.generatedTokens = m.generatedTokens + :amount,
-                    m.lastModified = CURRENT_TIMESTAMP
-                WHERE m.id = :modelId
-            """)
-    int incrementGeneratedTokens(UUID modelId, int amount);
 
     @Modifying
     @Query("""
@@ -51,7 +43,7 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE Model m
-            SET m.active = :modelStatus,
+            SET m.status = :modelStatus,
                 m.name = :modelName,
                 m.lastModified = CURRENT_TIMESTAMP
             WHERE m.id = :modelId
@@ -61,6 +53,6 @@ public interface ModelRepository extends JpaRepository<Model, UUID> {
             @Param("modelId") UUID modelId,
             @Param("accountId") UUID accountId,
             @Param("modelName") String modelName,
-            @Param("modelStatus") Boolean modelStatus
+            @Param("modelStatus") ModelStatus modelStatus
     );
 }
