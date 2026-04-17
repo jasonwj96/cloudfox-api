@@ -2,6 +2,7 @@ package com.cloudfox.api.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -44,6 +45,7 @@ public class Account {
     @Column(name = "mfa_type", length = 30)
     private String mfaType;
 
+    @CreationTimestamp
     @Column(name = "creation_date")
     private OffsetDateTime creationDate;
 
