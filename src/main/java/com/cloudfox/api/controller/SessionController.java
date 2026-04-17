@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.hc.core5.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,9 @@ public class SessionController {
 
     private final SessionService sessionService;
 
+    @Value("${COOKIE_SECURE:false}")
+    private boolean secureCookie;
+
     @PostMapping("/login")
     public ResponseEntity<SessionResponse> loginAccount(
             @CookieValue(name = "__host_cfx_sid", required = false) UUID sessionToken,
@@ -33,7 +37,7 @@ public class SessionController {
 
             ResponseCookie cookie = ResponseCookie.from("__host_cfx_sid", session.getSessionToken().toString())
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(secureCookie)
                     .path("/")
                     .sameSite("Lax")
                     .maxAge(30 * 24 * 60 * 60)
@@ -65,7 +69,7 @@ public class SessionController {
 
             ResponseCookie cookie = ResponseCookie.from("__host_cfx_sid", "")
                     .httpOnly(true)
-                    .secure(false)
+                    .secure(secureCookie)
                     .path("/")
                     .sameSite("Lax")
                     .maxAge(0)
