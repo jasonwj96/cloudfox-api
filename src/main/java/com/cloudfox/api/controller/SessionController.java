@@ -75,11 +75,4 @@ public class SessionController {
 
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/get-account-by-session")
-    public ResponseEntity<SessionResponse> refreshSession(
-            @CookieValue("__host_cfx_sid") UUID sessionToken) {
-        SessionResponse response = sessionService.getAccountBySession(sessionToken);
-        return ResponseEntity.ok(response);
-    }
 }

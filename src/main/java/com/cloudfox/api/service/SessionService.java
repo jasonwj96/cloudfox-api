@@ -1,7 +1,6 @@
 package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.SessionRequest;
-import com.cloudfox.api.dto.response.SessionResponse;
 import com.cloudfox.api.enums.HashAlgorithmEnum;
 import com.cloudfox.api.exceptions.AuthenticationException;
 import com.cloudfox.api.model.Account;
@@ -73,11 +72,6 @@ public class SessionService {
     public void refresh(UUID sessionToken) {
         sessionRepository.refreshExpirationDate(sessionToken, Instant.now(),
                 Instant.now().plus(30, ChronoUnit.DAYS));
-    }
-
-    public SessionResponse getAccountBySession(UUID sessionToken) {
-        SessionResponse response = new SessionResponse();
-        return response;
     }
 
     @Transactional
