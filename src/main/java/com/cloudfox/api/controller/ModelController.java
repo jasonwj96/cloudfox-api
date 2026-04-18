@@ -52,10 +52,10 @@ public class ModelController {
                 .body(modelService.createModel(accountId, request));
     }
 
-    @PatchMapping("/{modelId}")
+    @PatchMapping(path ="/{modelId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ModelResponse> updateModel(
             @AuthenticationPrincipal UUID accountId,
-            @RequestBody @Valid ModelRequest request,
+            @ModelAttribute @Valid ModelRequest request,
             @PathVariable UUID modelId) {
         int rowsAffected = modelService.saveModel(accountId, modelId, request);
 
