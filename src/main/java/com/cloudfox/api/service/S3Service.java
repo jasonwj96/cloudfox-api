@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.InputStream;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +57,21 @@ public class S3Service {
 
         } catch (S3Exception e) {
 
+            throw new RuntimeException("Failed S3 operation", e);
+        }
+    }
+
+    public InputStream getFile(UUID accountId, UUID modelId, String fileName) {
+        String key = accountId + "/" + modelId + "/" + fileName;
+        try {
+            GetObjectRequest request = GetObjectRequest.builder()
+                    .bucket(BUCKET)
+                    .key(key)
+                    .build();
+            return s3Client.getObject(request);
+        } catch (NoSuchKeyException e) {
+            throw new RuntimeException("File not found in S3: " + key, e);
+        } catch (S3Exception e) {
             throw new RuntimeException("Failed S3 operation", e);
         }
     }

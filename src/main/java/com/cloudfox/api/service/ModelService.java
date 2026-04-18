@@ -2,7 +2,9 @@ package com.cloudfox.api.service;
 
 import com.cloudfox.api.dto.request.ModelRequest;
 import com.cloudfox.api.dto.response.ModelDTO;
+import com.cloudfox.api.dto.response.ModelParam;
 import com.cloudfox.api.dto.response.ModelResponse;
+import com.cloudfox.api.dto.response.XgbModelFile;
 import com.cloudfox.api.enums.ModelStatus;
 import com.cloudfox.api.exceptions.ModelDoesNotExist;
 import com.cloudfox.api.kafka.ModelKafkaProducer;
@@ -16,12 +18,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +35,8 @@ public class ModelService {
     private final ModelRepository modelRepository;
     private final AccountRepository accountRepository;
     private final ModelKafkaProducer modelKafkaProducer;
+    private final S3Service s3Service;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public ModelResponse createModel(UUID accountId, ModelRequest request) {
@@ -104,8 +111,40 @@ public class ModelService {
     }
 
     public ModelResponse getAccountModels(UUID accountId) {
+        List<ModelDTO> models = modelRepository.findByAccountId(accountId)
+                .stream()
+                .map(model -> {
+                    try (InputStream file = s3Service.getFile(accountId, model.getId(), model.getFileName())) {
+                        XgbModelFile modelFile = objectMapper.readValue(file, XgbModelFile.class);
+                        List<String> featureNames = modelFile.learner().featureNames();
+                        List<String> featureTypes = modelFile.learner().featureTypes();
+
+                        List<ModelParam> modelParams = IntStream.range(0, featureNames.size())
+                                .mapToObj(i -> ModelParam.builder()
+                                        .featureName(featureNames.get(i))
+                                        .dataType(featureTypes.get(i))
+                                        .build())
+                                .toList();
+                        return ModelDTO.builder()
+                                .id(model.getId())
+                                .accountName(model.getAccount().getUsername())
+                                .name(model.getName())
+                                .generatedTokens(model.getGeneratedTokens())
+                                .creationDate(model.getCreationDate())
+                                .fileName(model.getFileName())
+                                .framework(model.getFramework())
+                                .status(model.getStatus())
+                                .lastModified(model.getLastModified())
+                                .modelParams(modelParams)
+                                .build();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to parse model artifact for model: " + model.getId(), e);
+                    }
+                })
+                .toList();
+
         return ModelResponse.builder()
-                .models(modelRepository.findModelsWithAccountName(accountId))
+                .models(models)
                 .build();
     }
 
@@ -121,8 +160,7 @@ public class ModelService {
                         .framework(model.getFramework())
                         .status(model.getStatus())
                         .lastModified(model.getLastModified())
-                        .build()
-        ).toList();
+                        .build()).toList();
 
         return ModelResponse.builder()
                 .models(models)

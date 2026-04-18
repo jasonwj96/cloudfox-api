@@ -1,6 +1,5 @@
 package com.cloudfox.api.repository;
 
-import com.cloudfox.api.dto.response.ModelDTO;
 import com.cloudfox.api.enums.ModelStatus;
 import com.cloudfox.api.model.Model;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,22 +14,8 @@ import java.util.UUID;
 public interface ModelRepository extends JpaRepository<Model, UUID> {
     Optional<Model> findByIdAndAccountId(UUID id, UUID accountId);
 
-    @Query("""
-                select new com.cloudfox.api.dto.response.ModelDTO(
-                    m.id,
-                    m.account.username,
-                    m.name,
-                    m.generatedTokens,
-                    m.creationDate,
-                    m.fileName,
-                    m.framework,
-                    m.status,
-                    m.lastModified
-                )
-                from Model m
-                where m.account.id = :accountId
-            """)
-    List<ModelDTO> findModelsWithAccountName(UUID accountId);
+    @Query("from Model m join fetch m.account where m.account.id = :accountId")
+    List<Model> findByAccountId(@Param("accountId") UUID accountId);
 
     @Modifying
     @Query("""

@@ -4,6 +4,7 @@ import com.cloudfox.api.enums.ModelStatus;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -21,4 +22,5 @@ public class ModelDTO {
     private String framework;
     private ModelStatus status;
     private Instant lastModified;
+    private List<ModelParam> modelParams;
 }
