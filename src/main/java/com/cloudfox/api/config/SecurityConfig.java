@@ -46,7 +46,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/accounts",
                                 "/session/login",
-                                "/session/logout")
+                                "/session/logout",
+                                "/payment/stripe/webhook")
                         .permitAll()
                         .anyRequest()
                         .authenticated()
