@@ -14,6 +14,7 @@ import com.cloudfox.api.repository.PaymentRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.EventDataObjectDeserializer;
@@ -23,6 +24,7 @@ import com.stripe.net.ApiResource;
 import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -49,6 +51,14 @@ public class PaymentService {
 
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
+
+    @Value("${stripe.secret-key}")
+    private String stripeApiKey;
+
+    @PostConstruct
+    public void init() {
+        Stripe.apiKey = stripeApiKey;
+    }
 
     @Transactional
     public PaymentResponse createPaymentIntent(
@@ -155,8 +165,6 @@ public class PaymentService {
 
     private void handleSucceeded(Event event) {
         PaymentIntent intent = extractIntent(event);
-
-
 
         Payment payment = paymentRepository
                 .findByProviderAndProviderPaymentId("STRIPE", intent.getId())
